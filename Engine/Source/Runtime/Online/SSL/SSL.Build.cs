@@ -1,0 +1,50 @@
+// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
+
+using UnrealBuildTool;
+
+public class SSL : ModuleRules
+{
+    public SSL(ReadOnlyTargetRules Target) : base(Target)
+    {
+        PublicDefinitions.Add("SSL_PACKAGE=1");
+
+		bool bShouldUseModule =
+			Target.Platform == UnrealTargetPlatform.Mac ||
+			Target.Platform == UnrealTargetPlatform.Win32 ||
+			Target.Platform == UnrealTargetPlatform.Win64 ||
+			Target.IsInPlatformGroup(UnrealPlatformGroup.Unix) ||
+            Target.Platform == UnrealTargetPlatform.IOS ||
+            Target.Platform == UnrealTargetPlatform.Android ||
+			Target.Platform == UnrealTargetPlatform.Lumin ||
+            Target.Platform == UnrealTargetPlatform.PS4;
+
+		PrivateDependencyModuleNames.AddRange(
+			new string[] {
+				"Core",
+			}
+		);
+
+		if (bShouldUseModule)
+		{
+			PublicDefinitions.Add("WITH_SSL=1");
+
+			PrivateIncludePaths.AddRange(
+				new string[] {
+					"Runtime/Online/SSL/Private",
+				}
+			);
+
+			AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
+
+			if (Target.Platform == UnrealTargetPlatform.Win32 ||
+				Target.Platform == UnrealTargetPlatform.Win64)
+			{
+				PublicAdditionalLibraries.Add("crypt32.lib");
+			}
+		}
+		else
+		{
+			PublicDefinitions.Add("WITH_SSL=0");
+		}
+    }
+}
