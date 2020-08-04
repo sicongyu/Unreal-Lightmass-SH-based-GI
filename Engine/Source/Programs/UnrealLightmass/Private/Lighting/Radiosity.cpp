@@ -300,6 +300,8 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 					FFinalGatherSample SkyLighting;
 					FFinalGatherSample UnusedSecondLighting;
 
+					// 先从临近LightRecord插值，如果无（附近的光照信息不足/不满足插值要求），则进行Adaptive Sample并进行Final Gather https://zhuanlan.zhihu.com/p/73749698 FinalGather + Irradiance Cache
+					// 注意参数（与第二次不同）： bFirstPass = true, SecondInterpolationSmoothnessReduction = 1
 					if (!RadiosityCache.InterpolateLighting(Vertex, true, false, 1.0f, SkyLighting, UnusedSecondLighting, MappingContext.DebugCacheRecords))
 					{
 						FFinalGatherSample UniformSampledIncomingRadiance;
@@ -366,6 +368,7 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 		InfluencingRecords.Data.Empty(GatherHitPoints.GatherHitPointData.Num());
 	}
 
+	// 为什么有第二次For Loop？
 	for (int32 Y = 0; Y < TextureMapping->SurfaceCacheSizeY; Y++)
 	{
 		for (int32 X = 0; X < TextureMapping->SurfaceCacheSizeX; X++)
@@ -388,6 +391,7 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 
 				const int32 SurfaceCacheIndex = Y * TextureMapping->SurfaceCacheSizeX + X;
 
+				// 为了收集InfluencingRecords？
 				FInfluencingRecordCollector RecordCollector(InfluencingRecords, SurfaceCacheIndex);
 				FInfluencingRecordCollector* RecordCollectorPtr = NULL;
 
@@ -404,6 +408,7 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 				{
 					FFinalGatherSample SkyLighting;
 					FFinalGatherSample UnusedSecondLighting;
+					// 第二次Interpolation，bFirstPass = False, SecondInterpolationSmoothnessReduction = IrradianceCachingSettings.SkyOcclusionSmoothnessReduction, RecordCollector = RecordCollectorPtr
 					RadiosityCache.InterpolateLighting(CurrentVertex, false, false, IrradianceCachingSettings.SkyOcclusionSmoothnessReduction, SkyLighting, UnusedSecondLighting, MappingContext.DebugCacheRecords, RecordCollectorPtr);
 
 					if (GeneralSettings.ViewSingleBounceNumber < 0 || GeneralSettings.ViewSingleBounceNumber == 1)
@@ -414,6 +419,7 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 					IncidentLightingForRadiosity += SkyLighting.IncidentLighting + SkyLighting.StationarySkyLighting.IncidentLighting;
 				}
 				
+				// bUseRadiositySolverForLightMultibounce 重要的参数，用radiosity替代photons
 				if (ImportanceTracingSettings.bUseRadiositySolverForLightMultibounce)
 				{
 					FGatheredLightSample DirectLighting;
@@ -422,6 +428,7 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 					TArray<FVector, TInlineAllocator<1>> VertexOffsets;
 					VertexOffsets.Add(FVector(0, 0, 0));
 
+					// From LightingSystem.inl 似乎是Radiosity区别于普通Irradiance Cache的重要依据：Radiosity还要采样直接光照
 					CalculateApproximateDirectLighting(CurrentVertex, TexelToVertex.TexelRadius, VertexOffsets, .1f, true, true, bDebugThisTexel, MappingContext, DirectLighting, Unused, Unused2);
 
 					IncidentLightingForRadiosity += DirectLighting.IncidentLighting;

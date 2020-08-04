@@ -5,8 +5,8 @@ using UnrealBuildTool;
 public class D3D11RHI : ModuleRules
 {
 	public D3D11RHI(ReadOnlyTargetRules Target) : base(Target)
-	{
-		if (Target.Platform == UnrealTargetPlatform.HoloLens)
+    {
+        if (Target.Platform == UnrealTargetPlatform.HoloLens)
 		{
 			PrivateIncludePaths.Add("Runtime/Windows/D3D11RHI/Private/HoloLens");
 		}

@@ -469,6 +469,7 @@ FLinearColor FStaticLightingSystem::FinalGatherSample(
 			FinalGatherInfo.NumBackfaceHits++;
 		}
 	}
+	// 如果Final Gather光线没有打到Object： 计算环境光
 	else
 	{
 		if (TangentPathDirection.Z > 0 && (GatherClassification & GLM_GatherLightEmitted))
@@ -488,6 +489,7 @@ FLinearColor FStaticLightingSystem::FinalGatherSample(
 	{
 		// When we're gathering lighting to cache it as direct lighting, we should take IndirectLightingScales into account
 		const bool bForDirectLighting = !bGatheringForCachedDirectLighting;
+		// 注意参数中的RayIntersection.bIntersects：是Callee中的bShadowed，如果为true则不进行Skylight的计算；为false则将天光加入Lighting，并将输出通过OutStationarySkyLighting传递回IncomingRadianceAdaptive
 		EvaluateSkyLighting(WorldPathDirection, PathSolidAngle, RayIntersection.bIntersects, bForDirectLighting, Lighting, OutStationarySkyLighting);
 	}
 
@@ -1323,6 +1325,7 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 			const FLinearColor Radiance = FilteredLighting.Lighting;
 			CombinedSkyUnoccludedDirection += FilteredLighting.UnoccludedSkyVector;
 
+			// 天光和照度储存, Radiance和FilteredLighting.StationarySkyLighting都是FLinearColor，存储函数定义见Bookmark1
 			IncomingRadiance.AddIncomingRadiance(Radiance, SampleWeight, TangentPathDirection, WorldPathDirection);
 			IncomingRadiance.AddIncomingStationarySkyLight(FilteredLighting.StationarySkyLighting, SampleWeight, TangentPathDirection, WorldPathDirection);
 			checkSlow(IncomingRadiance.AreFloatsValid());
