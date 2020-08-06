@@ -1181,6 +1181,9 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 	FLightRay LightRays[4];
 	FLightRayIntersection LightRayIntersections[4];
 
+	// MYCODE
+	FSHVector2 SkyLightingVisiblitySampleCoeff;
+
 	// Initialize the root level of the refinement grid with lighting values
 	for (int32 ThetaIndex = 0; ThetaIndex < NumThetaSteps; ThetaIndex++)
 	{
@@ -1202,6 +1205,10 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 				MappingContext,
 				LightRays,
 				LightRayIntersections);
+
+			// MYCODE
+			FSHVector2 SampleBasis = FSHVector2::SHBasisFunction(TriangleTangentPathDirection);
+			SkyLightingVisiblitySampleCoeff += LightRayIntersections->bIntersects ? SampleBasis * 0.0f : SampleBasis * 1.0f;
 
 			FVector UnoccludedSkyVector;
 			FLinearColor StationarySkyLighting;
@@ -1346,6 +1353,10 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 	IncomingRadiance.SetSkyOcclusion(BentNormal);
 
 	RefinementGrid.ReturnToFreeList(MappingContext.RefinementTreeFreePool);
+
+	// MYCODE
+	const float MonteCarloFactor = 4.0 * PI / UniformHemisphereSamples.Num();
+	IncomingRadiance.SkyLightingVisibilityCoeff = SkyLightingVisiblitySampleCoeff * MonteCarloFactor;
 
 	return IncomingRadiance;
 }

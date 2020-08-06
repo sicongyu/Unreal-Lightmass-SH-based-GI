@@ -261,6 +261,10 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 	TextureMapping->RadiositySurfaceCache[1].Empty(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
 	TextureMapping->RadiositySurfaceCache[1].AddZeroed(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
 
+	// MYCODE
+	TextureMapping->SkyLightingVisibility.Empty(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
+	TextureMapping->SkyLightingVisibility.AddZeroed(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
+
 	const bool bCacheFinalGatherHitPoints = ImportanceTracingSettings.bCacheFinalGatherHitPointsForRadiosity && GeneralSettings.NumSkyLightingBounces > 0;
 
 	FGatherHitPoints& GatherHitPoints = TextureMapping->UncompressedGatherHitPoints;
@@ -276,6 +280,11 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 	FLMRandomStream RandomStream(0);
 
 #if LIGHTMASS_DO_PROCESSING
+
+	// MYCODE-DEBUG
+	//SurfaceCacheDebugX = TextureMapping->SurfaceCacheSizeX - 1;
+	//SurfaceCacheDebugY = TextureMapping->SurfaceCacheSizeY - 1;
+	//bDebugThisMapping = true;
 
 	if (GeneralSettings.NumSkyLightingBounces > 0)
 	{
@@ -353,6 +362,10 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 
 						// Add the incident radiance sample to the cache.
 						RadiosityCache.AddRecord(NewRecord, false, false);
+
+						// MYCODE
+						const int32 SurfaceCacheIndex = Y * TextureMapping->SurfaceCacheSizeX + X;
+						TextureMapping->SkyLightingVisibility[SurfaceCacheIndex] = UniformSampledIncomingRadiance.SkyLightingVisibilityCoeff;
 					}
 				}
 			}

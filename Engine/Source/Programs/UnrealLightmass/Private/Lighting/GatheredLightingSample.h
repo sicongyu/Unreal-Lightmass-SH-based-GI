@@ -171,6 +171,9 @@ public:
 	 */
 	TGatheredLightSample<SHOrder> StationarySkyLighting;
 
+	// MYCODE
+	FSHVector2 SkyLightingVisibilityCoeff;
+
 	/** Initialization constructor. */
 	TFinalGatherSample() :
 		TGatheredLightSample<SHOrder>(),

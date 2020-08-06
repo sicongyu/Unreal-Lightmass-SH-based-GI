@@ -10,7 +10,7 @@
  * And having debug information about that texel tracked during subsequent lighting rebuilds.
  * Have to enable 'r.TexelDebugging' in the editor as well.
  */
-#define ALLOW_LIGHTMAP_SAMPLE_DEBUGGING	0
+#define ALLOW_LIGHTMAP_SAMPLE_DEBUGGING	1
 
 #if USE_EMBREE
 #include <embree2/rtcore.h>

@@ -221,6 +221,9 @@ public:
 	int32 SurfaceCacheSizeX;
 	int32 SurfaceCacheSizeY;
 
+	// MYCODE
+	TArray<FSHVector2> SkyLightingVisibility;
+
 	/** Counts how many cache tasks this mapping needs completed. */
 	volatile int32 NumOutstandingCacheTasks;
 
