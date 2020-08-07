@@ -106,6 +106,9 @@ protected:
 
 	TArray<FLinearColor> RadiositySurfaceCache[2];
 
+	// MYCODE
+	TArray<FSHVector2> SkyLightingVisibility;
+
 	/** Indexed by texel coordinate */
 	FCompressedInfluencingRecords CompressedInfluencingRecords;
 	FInfluencingRecords InfluencingRecordsSurfaceCache;
@@ -164,6 +167,8 @@ public:
 	virtual int32 GetSurfaceCacheIndex(const struct FMinimalStaticLightingVertex& Vertex) const = 0;
 	FLinearColor GetCachedRadiosity(int32 RadiosityBufferIndex, int32 SurfaceCacheIndex) const;
 	size_t FreeRadiosityTemporaries();
+	// MYCODE
+	FSHVector2 GetCachedSkyLightingVisiblity(int32 SurfaceCacheIndex) const;
 
 	uint32 GetIrradiancePhotonCacheBytes() const { return SurfaceCacheLighting.GetAllocatedSize(); }
 
@@ -220,9 +225,6 @@ public:
 	/** The sizes that CachedIrradiancePhotons were stored with */
 	int32 SurfaceCacheSizeX;
 	int32 SurfaceCacheSizeY;
-
-	// MYCODE
-	TArray<FSHVector2> SkyLightingVisibility;
 
 	/** Counts how many cache tasks this mapping needs completed. */
 	volatile int32 NumOutstandingCacheTasks;

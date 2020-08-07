@@ -226,6 +226,8 @@ public:
 		(TGatheredLightSample<SHOrder>&)Result = (const TGatheredLightSample<SHOrder>&)(*this) * Scalar;
 		Result.Occlusion = Occlusion * Scalar;
 		Result.StationarySkyLighting = StationarySkyLighting * Scalar;
+		// MYCODE
+		Result.SkyLightingVisibilityCoeff = SkyLightingVisibilityCoeff * Scalar;
 		return Result;
 	}
 
@@ -235,6 +237,8 @@ public:
 		(TGatheredLightSample<SHOrder>&)Result = (const TGatheredLightSample<SHOrder>&)(*this) + (const TGatheredLightSample<SHOrder>&)SampleB;
 		Result.Occlusion = Occlusion + SampleB.Occlusion;
 		Result.StationarySkyLighting = StationarySkyLighting + SampleB.StationarySkyLighting;
+		// MYCODE
+		Result.SkyLightingVisibilityCoeff = SkyLightingVisibilityCoeff + SampleB.SkyLightingVisibilityCoeff;
 		return Result;
 	}
 };
