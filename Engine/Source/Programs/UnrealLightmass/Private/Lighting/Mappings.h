@@ -107,7 +107,9 @@ protected:
 	TArray<FLinearColor> RadiositySurfaceCache[2];
 
 	// MYCODE
-	TArray<FSHVector2> SkyLightingVisibility;
+	TArray<FSHVector2> AccumaltedSkyLightingVisibility;
+
+	TArray<FSHVector2> SkyLightingVisibility[2];
 
 	/** Indexed by texel coordinate */
 	FCompressedInfluencingRecords CompressedInfluencingRecords;
@@ -168,7 +170,7 @@ public:
 	FLinearColor GetCachedRadiosity(int32 RadiosityBufferIndex, int32 SurfaceCacheIndex) const;
 	size_t FreeRadiosityTemporaries();
 	// MYCODE
-	FSHVector2 GetCachedSkyLightingVisiblity(int32 SurfaceCacheIndex) const;
+	FSHVector2 GetCachedSkyLightingVisiblity(int32 VisibilityBufferIndex, int32 SurfaceCacheIndex) const;
 
 	uint32 GetIrradiancePhotonCacheBytes() const { return SurfaceCacheLighting.GetAllocatedSize(); }
 

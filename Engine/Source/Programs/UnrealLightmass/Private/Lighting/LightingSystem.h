@@ -2307,6 +2307,11 @@ private:
 		FStaticLightingMappingContext& MappingContext,
 		bool bDebugThisTexel) const;
 
+	FSHVector2 CalculateExitantVisibility(
+		const FStaticLightingMapping* HitMapping,
+		const FMinimalStaticLightingVertex& Vertex,
+		EHemisphereGatherClassification GatherClassification) const;
+
 	void IntersectLightRays(
 		const FStaticLightingMapping* Mapping,
 		const FFullStaticLightingVertex& Vertex,
@@ -2338,7 +2343,9 @@ private:
 		FFinalGatherInfo& FinalGatherInfo,
 		FFinalGatherHitPoint& HitPoint,
 		FVector& OutUnoccludedSkyVector,
-		FLinearColor& OutStationarySkyLighting) const;
+		FLinearColor& OutStationarySkyLighting,
+		FSHVector2& OutVisibility,
+		const FVector4& TriangleTangentPathDirection) const;
 
 	/** 
 	 * Final gather using adaptive sampling to estimate the incident radiance function. 

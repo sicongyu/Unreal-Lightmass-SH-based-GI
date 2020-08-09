@@ -3802,8 +3802,8 @@ FLinearColor FStaticLightingMapping::GetCachedRadiosity(int32 RadiosityBufferInd
 }
 
 // MYCODE
-FSHVector2 FStaticLightingMapping::GetCachedSkyLightingVisiblity(int32 SurfaceCacheIndex) const {
-	return SkyLightingVisibility[SurfaceCacheIndex];
+FSHVector2 FStaticLightingMapping::GetCachedSkyLightingVisiblity(int32 VisibilityBufferIndex, int32 SurfaceCacheIndex) const {
+	return SkyLightingVisibility[VisibilityBufferIndex][SurfaceCacheIndex];
 }
 
 FLinearColor FStaticLightingTextureMapping::GetSurfaceCacheLighting(const FMinimalStaticLightingVertex& Vertex) const

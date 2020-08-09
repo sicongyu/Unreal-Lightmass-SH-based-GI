@@ -268,6 +268,23 @@ float FStaticLightingSystem::EvaluateSkyVariance(const FVector4& IncomingDirecti
 	return Variance;
 }
 
+FSHVector2 FStaticLightingSystem::CalculateExitantVisibility(
+	const FStaticLightingMapping* HitMapping,
+	const FMinimalStaticLightingVertex& Vertex,
+	EHemisphereGatherClassification GatherClassification) const
+{
+	FSHVector2 AccumulatedVisibility;
+
+	if ((GatherClassification & GLM_GatherRadiosityBuffer0) || (GatherClassification & GLM_GatherRadiosityBuffer1))
+	{
+		const int32 BufferIndex = GatherClassification & GLM_GatherRadiosityBuffer0 ? 0 : 1;
+		const FSHVector2 Visibility = HitMapping->GetCachedSkyLightingVisiblity(BufferIndex, HitMapping->GetSurfaceCacheIndex(Vertex));
+		AccumulatedVisibility += Visibility;
+	}
+
+	return AccumulatedVisibility;
+}
+
 /** Calculates exitant radiance at a vertex. */
 FLinearColor FStaticLightingSystem::CalculateExitantRadiance(
 	const FStaticLightingMapping* HitMapping,
@@ -380,6 +397,7 @@ void FStaticLightingSystem::IntersectLightRays(
 	MappingContext.Stats.FirstBounceRayTraceTime += MappingContext.RayCache.FirstHitRayTraceTime - LastRayTraceTime;
 }
 
+// 加入了CalculateExitantVisibility
 FLinearColor FStaticLightingSystem::FinalGatherSample(
 	const FStaticLightingMapping* Mapping,
 	const FFullStaticLightingVertex& Vertex,
@@ -398,7 +416,9 @@ FLinearColor FStaticLightingSystem::FinalGatherSample(
 	FFinalGatherInfo& FinalGatherInfo,
 	FFinalGatherHitPoint& HitPoint,
 	FVector& OutUnoccludedSkyVector,
-	FLinearColor& OutStationarySkyLighting) const
+	FLinearColor& OutStationarySkyLighting,
+	FSHVector2& OutVisibility,
+	const FVector4& TriangleTangentPathDirection) const
 {
 	FLinearColor Lighting = FLinearColor::Black;
 	OutStationarySkyLighting = FLinearColor::Black;
@@ -451,6 +471,11 @@ FLinearColor FStaticLightingSystem::FinalGatherSample(
 					checkSlow(FLinearColorUtils::AreFloatsValid(PathVertexOutgoingRadiance));
 					Lighting += PathVertexOutgoingRadiance;
 
+					// MYCODE
+					OutVisibility = CalculateExitantVisibility(RayIntersection.Mapping,
+						RayIntersection.IntersectionVertex,
+						GatherClassification);
+
 #if ALLOW_LIGHTMAP_SAMPLE_DEBUGGING
 					if (PathVertexOutgoingRadiance.R > DELTA || PathVertexOutgoingRadiance.G > DELTA || PathVertexOutgoingRadiance.B > DELTA)
 					{
@@ -476,6 +501,9 @@ FLinearColor FStaticLightingSystem::FinalGatherSample(
 		{
 			const FLinearColor EnvironmentLighting = EvaluateEnvironmentLighting(-WorldPathDirection);
 			Lighting += EnvironmentLighting;
+			// MYCODE
+			FSHVector2 SampleBasis = FSHVector2::SHBasisFunction(TriangleTangentPathDirection);
+			OutVisibility = SampleBasis * 1.0f;
 		}
 	}
 
@@ -1017,6 +1045,10 @@ public:
 							FFinalGatherInfo SubsampleFinalGatherInfo;
 							FFinalGatherHitPoint HitPoint;
 
+							// MYCODE: Padding variable for SH. TODO: Fix the SH into Refinement
+							FSHVector2 UnusedOutVisibility;
+							FVector4 UnusedTriangleTangentpathDirection;
+
 							const FLinearColor SubsampleLighting = LightingSystem.FinalGatherSample(
 								Mapping,
 								Vertex,
@@ -1035,7 +1067,9 @@ public:
 								SubsampleFinalGatherInfo,
 								HitPoint,
 								UnoccludedSkyVector,
-								StationarySkyLighting);
+								StationarySkyLighting,
+								UnusedOutVisibility,
+								UnusedTriangleTangentpathDirection);
 
 							int32 StoredHitPointIndex = -1;
 
@@ -1182,7 +1216,7 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 	FLightRayIntersection LightRayIntersections[4];
 
 	// MYCODE
-	FSHVector2 SkyLightingVisiblitySampleCoeff;
+	FSHVector2 AccumlatedSkyLightingVisiblitySample;
 
 	// Initialize the root level of the refinement grid with lighting values
 	for (int32 ThetaIndex = 0; ThetaIndex < NumThetaSteps; ThetaIndex++)
@@ -1206,14 +1240,12 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 				LightRays,
 				LightRayIntersections);
 
-			// MYCODE
-			FSHVector2 SampleBasis = FSHVector2::SHBasisFunction(TriangleTangentPathDirection);
-			SkyLightingVisiblitySampleCoeff += LightRayIntersections->bIntersects ? SampleBasis * 0.0f : SampleBasis * 1.0f;
-
 			FVector UnoccludedSkyVector;
 			FLinearColor StationarySkyLighting;
 			FFinalGatherInfo FinalGatherInfo;
 			FFinalGatherHitPoint HitPoint;
+			// MYCODE
+			FSHVector2 SkyLightingVisibility;
 
 			const FLinearColor Radiance = FinalGatherSample(
 				Mapping,
@@ -1233,7 +1265,9 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 				FinalGatherInfo,
 				HitPoint,
 				UnoccludedSkyVector,
-				StationarySkyLighting);
+				StationarySkyLighting,
+				SkyLightingVisibility,
+				TriangleTangentPathDirection);
 
 			int32 StoredHitPointIndex = -1;
 
@@ -1246,6 +1280,8 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 
 			NumBackfaceHits += FinalGatherInfo.NumBackfaceHits;
 			RefinementGrid.SetRootElement(ThetaIndex, PhiIndex, FRefinementElement(FLightingAndOcclusion(Radiance, UnoccludedSkyVector, StationarySkyLighting, FinalGatherInfo.NumSamplesOccluded), UniformHemisphereSampleUniforms[SampleIndex], StoredHitPointIndex));
+			// MYCODE
+			AccumlatedSkyLightingVisiblitySample += SkyLightingVisibility;
 		}
 	}
 
@@ -1356,7 +1392,7 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 
 	// MYCODE
 	const float MonteCarloFactor = 4.0 * PI / UniformHemisphereSamples.Num();
-	IncomingRadiance.SkyLightingVisibilityCoeff = SkyLightingVisiblitySampleCoeff * MonteCarloFactor;
+	IncomingRadiance.SkyLightingVisibilityCoeff = AccumlatedSkyLightingVisiblitySample * MonteCarloFactor;
 
 	return IncomingRadiance;
 }

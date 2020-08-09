@@ -262,8 +262,13 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 	TextureMapping->RadiositySurfaceCache[1].AddZeroed(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
 
 	// MYCODE
-	TextureMapping->SkyLightingVisibility.Empty(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
-	TextureMapping->SkyLightingVisibility.AddZeroed(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
+	TextureMapping->AccumaltedSkyLightingVisibility.Empty(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
+	TextureMapping->AccumaltedSkyLightingVisibility.AddZeroed(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
+
+	TextureMapping->SkyLightingVisibility[0].Empty(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
+	TextureMapping->SkyLightingVisibility[0].AddZeroed(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
+	TextureMapping->SkyLightingVisibility[1].Empty(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
+	TextureMapping->SkyLightingVisibility[1].AddZeroed(TextureMapping->SurfaceCacheSizeX * TextureMapping->SurfaceCacheSizeY);
 
 	const bool bCacheFinalGatherHitPoints = ImportanceTracingSettings.bCacheFinalGatherHitPointsForRadiosity && GeneralSettings.NumSkyLightingBounces > 0;
 
@@ -429,12 +434,14 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 					if (GeneralSettings.ViewSingleBounceNumber < 0 || GeneralSettings.ViewSingleBounceNumber == 1)
 					{
 						IncidentLighting += SkyLighting.IncidentLighting + SkyLighting.StationarySkyLighting.IncidentLighting;
+						// MYCODE
+						TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex] += SkyLighting.SkyLightingVisibilityCoeff;
 					}
 
 					IncidentLightingForRadiosity += SkyLighting.IncidentLighting + SkyLighting.StationarySkyLighting.IncidentLighting;
 
 					// MYCODE: 储存由Interpolation/Adaptive Final Gather 得到的SH2Coeff
-					TextureMapping->SkyLightingVisibility[SurfaceCacheIndex] = SkyLighting.SkyLightingVisibilityCoeff;
+					TextureMapping->SkyLightingVisibility[0][SurfaceCacheIndex] = SkyLighting.SkyLightingVisibilityCoeff;
 				}
 				
 				// bUseRadiositySolverForLightMultibounce 重要的参数，用radiosity替代photons
@@ -721,16 +728,22 @@ void FStaticLightingSystem::RadiosityIterationTextureMapping(FStaticLightingText
 					const FLinearColor Reflectance = (bIsTranslucent ? FLinearColor::Black : TextureMapping->Mesh->EvaluateTotalReflectance(CurrentVertex, TexelToVertex.ElementIndex)) * (float)INV_PI;
 					const FLinearColor IterationRadiosity = IterationLighting.IncidentLighting * Reflectance;
 
+					// MYCODE
+					const float VisibilityReflectance = Reflectance.GetLuminance();
+					FSHVector2 SkyLightingVisibility = IterationLighting.SkyLightingVisibilityCoeff * VisibilityReflectance;
+
 					if (GeneralSettings.ViewSingleBounceNumber < 0 || GeneralSettings.ViewSingleBounceNumber == PassIndex + 2)
 					{
 						// Accumulate this bounce's lighting
 						TextureMapping->SurfaceCacheLighting[SurfaceCacheIndex] += IterationRadiosity;
+						// MYCODE
+						TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex] += SkyLightingVisibility;
 					}
 				
 					// Store in one of the radiosity buffers for the next iteration
 					TextureMapping->RadiositySurfaceCache[DestRadiosityBufferIndex][SurfaceCacheIndex] = IterationRadiosity;
 					// MYCODE: 储存由Interpolation/Adaptive Final Gather 得到的SH2Coeff
-					TextureMapping->SkyLightingVisibility[SurfaceCacheIndex] = IterationLighting.SkyLightingVisibilityCoeff;
+					TextureMapping->SkyLightingVisibility[DestRadiosityBufferIndex][SurfaceCacheIndex] = SkyLightingVisibility;
 				}
 			}
 		}
@@ -777,7 +790,7 @@ void FStaticLightingSystem::RadiosityIterationCachedHitpointsTextureMapping(cons
 			NewRadiosity += IncomingRadiance * HitPoint.Weight.GetFloat();
 
 			// MYCODE: 来自GatherHitPoint的Weight，暂时不知道作用，先乘了再说
-			const FSHVector2 IncomingSkyLightingVisibilityCoeff = HitTextureMapping->GetCachedSkyLightingVisiblity(HitPoint.MappingSurfaceCoordinate);
+			const FSHVector2 IncomingSkyLightingVisibilityCoeff = HitTextureMapping->GetCachedSkyLightingVisiblity(SourceRadiosityBufferIndex, HitPoint.MappingSurfaceCoordinate);
 			NewSkyLightingVisibility += IncomingSkyLightingVisibilityCoeff * HitPoint.Weight.GetFloat();
 		}
 
@@ -831,16 +844,21 @@ void FStaticLightingSystem::RadiosityIterationCachedHitpointsTextureMapping(cons
 
 				FLinearColor IterationRadiosity = (AccumulatedRadiosity / TotalWeight) * DiffuseReflectance;
 				// MYCODE: ？DiffuseReflectance指的是材质中的Diffuse系数，这里我们的Visibility应该不用乘（也乘不了）
-				//FSHVector2 IterationSkyLightingVisibility = (AccumulateSkyLightingVisibility / TotalWeight) * DiffuseReflectance;
+				const float VisibilityReflectance = DiffuseReflectance.GetLuminance();
+				FSHVector2 IterationSkyLightingVisibility = (AccumulateSkyLightingVisibility / TotalWeight) * VisibilityReflectance;
 				
 				if (GeneralSettings.ViewSingleBounceNumber < 0 || GeneralSettings.ViewSingleBounceNumber == PassIndex + 2)
 				{
 					// Accumulate this bounce's lighting
 					TextureMapping->SurfaceCacheLighting[SurfaceCacheIndex] += IterationRadiosity;
+					// MYCODE
+					TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex] += IterationSkyLightingVisibility;
 				}
 
 				// Store in one of the radiosity buffers for the next iteration
 				TextureMapping->RadiositySurfaceCache[DestRadiosityBufferIndex][SurfaceCacheIndex] = IterationRadiosity;
+				// MYCODE
+				TextureMapping->SkyLightingVisibility[DestRadiosityBufferIndex][SurfaceCacheIndex] = IterationSkyLightingVisibility;
 			}
 		}
 	}
