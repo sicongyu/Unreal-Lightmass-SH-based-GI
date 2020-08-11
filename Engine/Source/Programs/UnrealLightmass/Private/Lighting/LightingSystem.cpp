@@ -71,6 +71,9 @@ FLightSample FGatheredLightMapSample::ConvertToLightSample(bool bDebugThisSample
 
 	NewSample.AOMaterialMask = HighQuality.AOMaterialMask;
 
+	// MYCODE
+	NewSample.SkyLightingVisibility = HighQuality.SkyLightingVisibilityCoeff;
+
 	return NewSample;
 }
 

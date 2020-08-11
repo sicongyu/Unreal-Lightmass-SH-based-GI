@@ -301,6 +301,17 @@ public:
 		return FVector(-V[3], -V[1], V[2]).GetSafeNormal();
 	}
 
+	// MYCODE: Extract the first four coeffs (the first two orders)
+	FVector4 ConvertToVector4() const
+	{
+		FVector4 Result;
+		for (int i = 0; i < 4; i++)
+		{
+			Result[i] = V[i];
+		}
+		return Result;
+	}
+
 	static TSHVector CalcDiffuseTransfer(const FVector& Normal)
 	{
 		TSHVector Result = SHBasisFunction(Normal);
@@ -449,6 +460,8 @@ public:
 		return Lambda;
 	}
 } GCC_ALIGN(16);
+
+
 
 
 /** Specialization for 2nd order to avoid expensive trig functions. */

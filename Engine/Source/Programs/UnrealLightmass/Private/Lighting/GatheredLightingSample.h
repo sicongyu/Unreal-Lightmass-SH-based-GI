@@ -30,6 +30,9 @@ public:
 
 	float AOMaterialMask;
 
+	// MYCODE
+	FSHVector2 SkyLightingVisibilityCoeff;
+
 	/** Initialization constructor. */
 	TGatheredLightSample()
 	{
@@ -71,6 +74,8 @@ public:
 		Result.IncidentLighting = IncidentLighting * Scalar;
 		Result.SkyOcclusion = SkyOcclusion * Scalar;
 		Result.AOMaterialMask = AOMaterialMask * Scalar;
+		// MYCODE
+		Result.SkyLightingVisibilityCoeff = SkyLightingVisibilityCoeff * Scalar;
 		return Result;
 	}
 
@@ -82,6 +87,8 @@ public:
 		Result.IncidentLighting = IncidentLighting + SampleB.IncidentLighting;
 		Result.SkyOcclusion = SkyOcclusion + SampleB.SkyOcclusion;
 		Result.AOMaterialMask = AOMaterialMask + SampleB.AOMaterialMask;
+		// MYCODE
+		Result.SkyLightingVisibilityCoeff = SkyLightingVisibilityCoeff + SampleB.SkyLightingVisibilityCoeff;
 		return Result;
 	}
 };
@@ -171,9 +178,6 @@ public:
 	 */
 	TGatheredLightSample<SHOrder> StationarySkyLighting;
 
-	// MYCODE
-	FSHVector2 SkyLightingVisibilityCoeff;
-
 	/** Initialization constructor. */
 	TFinalGatherSample() :
 		TGatheredLightSample<SHOrder>(),
@@ -226,8 +230,6 @@ public:
 		(TGatheredLightSample<SHOrder>&)Result = (const TGatheredLightSample<SHOrder>&)(*this) * Scalar;
 		Result.Occlusion = Occlusion * Scalar;
 		Result.StationarySkyLighting = StationarySkyLighting * Scalar;
-		// MYCODE
-		Result.SkyLightingVisibilityCoeff = SkyLightingVisibilityCoeff * Scalar;
 		return Result;
 	}
 
@@ -237,8 +239,6 @@ public:
 		(TGatheredLightSample<SHOrder>&)Result = (const TGatheredLightSample<SHOrder>&)(*this) + (const TGatheredLightSample<SHOrder>&)SampleB;
 		Result.Occlusion = Occlusion + SampleB.Occlusion;
 		Result.StationarySkyLighting = StationarySkyLighting + SampleB.StationarySkyLighting;
-		// MYCODE
-		Result.SkyLightingVisibilityCoeff = SkyLightingVisibilityCoeff + SampleB.SkyLightingVisibilityCoeff;
 		return Result;
 	}
 };
