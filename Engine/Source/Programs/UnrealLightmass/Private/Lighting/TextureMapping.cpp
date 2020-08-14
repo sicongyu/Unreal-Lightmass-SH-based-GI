@@ -678,6 +678,9 @@ void FStaticLightingSystem::FinalizeSurfaceCacheTextureMapping(FStaticLightingTe
 				const FLinearColor Reflectance = (bTranslucent ? FLinearColor::Black : TextureMapping->Mesh->EvaluateTotalReflectance(CurrentVertex, TexelToVertex.ElementIndex)) * (float)INV_PI;
 				// Combine all the lighting and surface reflectance so the final gather ray only needs one memory fetch
 				TextureMapping->SurfaceCacheLighting[SurfaceCacheIndex] = FinalIncidentLighting * Reflectance;
+				// MYCODE
+				const float VisiblityReflectance = Reflectance.GetLuminance();
+				TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex] *= VisiblityReflectance;
 			}
 		}
 	}
