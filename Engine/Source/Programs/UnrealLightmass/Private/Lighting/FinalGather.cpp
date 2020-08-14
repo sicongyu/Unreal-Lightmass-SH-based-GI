@@ -282,6 +282,11 @@ FSHVector2 FStaticLightingSystem::CalculateExitantVisibility(
 		AccumulatedVisibility += Visibility;
 	}
 
+	else if (GatherClassification == GLM_FinalGather)
+	{
+		AccumulatedVisibility += HitMapping->AccumaltedSkyLightingVisibility[HitMapping->GetSurfaceCacheIndex(Vertex)];
+	}
+
 	return AccumulatedVisibility;
 }
 
@@ -472,7 +477,8 @@ FLinearColor FStaticLightingSystem::FinalGatherSample(
 					Lighting += PathVertexOutgoingRadiance;
 
 					// MYCODE
-					OutVisibility = CalculateExitantVisibility(RayIntersection.Mapping,
+					OutVisibility = CalculateExitantVisibility(
+						RayIntersection.Mapping,
 						RayIntersection.IntersectionVertex,
 						GatherClassification);
 
@@ -1519,6 +1525,7 @@ FFinalGatherSample FStaticLightingSystem::CachePointIncomingRadiance(
 	{
 		// If final gathering is disabled, all indirect lighting will be estimated using photon mapping.
 		// This is really only useful for debugging since it requires an excessive number of indirect photons to get indirect shadows for the first bounce.
+		// 隐藏：bUseFinalGathering=True， bVisualizeVolumeLightInterpolation = fale
 		if (PhotonMappingSettings.bUsePhotonMapping 
 			&& GeneralSettings.NumIndirectLightingBounces > 0
 			&& !PhotonMappingSettings.bUseFinalGathering)

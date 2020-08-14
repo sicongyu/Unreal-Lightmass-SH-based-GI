@@ -602,6 +602,7 @@ void FStaticLightingSystem::RadiosityIterationTextureMapping(FStaticLightingText
 
 	RasterizeToSurfaceCacheTextureMapping(TextureMapping, bDebugThisMapping, TexelToVertexMap);
 
+	// False in our case
 	if (ImportanceTracingSettings.bCacheFinalGatherHitPointsForRadiosity)
 	{
 		RadiosityIterationCachedHitpointsTextureMapping(TexelToVertexMap, TextureMapping, PassIndex);
@@ -769,9 +770,9 @@ void FStaticLightingSystem::RadiosityIterationCachedHitpointsTextureMapping(cons
 	IterationRecordRadiosity.AddUninitialized(GatherHitPoints.GatherHitPointRanges.Num());
 
 	// MYCODE: AddUninitialized：可能所有元素都会被遍历，因此Uninitialized
-	TArray<FSHVector2> IterationSkyLightingVisibility;
-	IterationSkyLightingVisibility.Empty(GatherHitPoints.GatherHitPointRanges.Num());
-	IterationSkyLightingVisibility.AddUninitialized(GatherHitPoints.GatherHitPointRanges.Num());
+	TArray<FSHVector2> IterationRecordSkyLightingVisibility;
+	IterationRecordSkyLightingVisibility.Empty(GatherHitPoints.GatherHitPointRanges.Num());
+	IterationRecordSkyLightingVisibility.AddUninitialized(GatherHitPoints.GatherHitPointRanges.Num());
 
 	for (int32 LightingCacheRecordIndex = 0; LightingCacheRecordIndex < GatherHitPoints.GatherHitPointRanges.Num(); LightingCacheRecordIndex++)
 	{
@@ -796,7 +797,7 @@ void FStaticLightingSystem::RadiosityIterationCachedHitpointsTextureMapping(cons
 
 		IterationRecordRadiosity[LightingCacheRecordIndex] = NewRadiosity;
 		// MYCODE
-		IterationSkyLightingVisibility[LightingCacheRecordIndex] = NewSkyLightingVisibility;
+		IterationRecordSkyLightingVisibility[LightingCacheRecordIndex] = NewSkyLightingVisibility;
 	}
 
 	FInfluencingRecords LocalInfluencingRecords;
@@ -834,7 +835,7 @@ void FStaticLightingSystem::RadiosityIterationCachedHitpointsTextureMapping(cons
 					// ?用Error Matirx为VisibilitySHCache加权（原本Error Matrix用于修正插值误差，为何如今利用Cache还要用上？）
 					AccumulatedRadiosity += IterationRecordRadiosity[InfluencingRecord.RecordIndex] * RecordWeight;
 					// MYCODE: 先把SHCoeff乘上Error Matrix加权，乘了再说
-					AccumulateSkyLightingVisibility += IterationSkyLightingVisibility[InfluencingRecord.RecordIndex] * RecordWeight;
+					AccumulateSkyLightingVisibility += IterationRecordSkyLightingVisibility[InfluencingRecord.RecordIndex] * RecordWeight;
 					TotalWeight += RecordWeight;
 				}
 
