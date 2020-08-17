@@ -69,10 +69,19 @@ FLightSample FGatheredLightMapSample::ConvertToLightSample(bool bDebugThisSample
 	NewSample.SkyOcclusion[1] = HighQuality.SkyOcclusion.Y;
 	NewSample.SkyOcclusion[2] = HighQuality.SkyOcclusion.Z;
 
+	//NewSample.SkyOcclusion[0] = HighQuality.SkyLightingVisibility.V[0];
+	//NewSample.SkyOcclusion[1] = HighQuality.SkyLightingVisibility.V[1];
+	//NewSample.SkyOcclusion[2] = HighQuality.SkyLightingVisibility.V[2];
+
 	NewSample.AOMaterialMask = HighQuality.AOMaterialMask;
 
-	// MYCODE
-	NewSample.SkyLightingVisibility = HighQuality.SkyLightingVisibilityCoeff;
+	// MYCODE: Orders stored in FLightSample: [1][2][3][0]
+	//NewSample.SkyLightingVisibility = HighQuality.SkyLightingVisibility;
+	float l0 = HighQuality.SkyLightingVisibility.V[0] * 2.0f;
+	NewSample.SkyLightingVisibility.V[0] = l0;
+	NewSample.SkyLightingVisibility.V[1] = l0 == 0.0f ? l0 : HighQuality.SkyLightingVisibility.V[1] / l0;
+	NewSample.SkyLightingVisibility.V[2] = l0 == 0.0f ? l0 : HighQuality.SkyLightingVisibility.V[2] / l0;
+	NewSample.SkyLightingVisibility.V[3] = l0 == 0.0f ? l0 : HighQuality.SkyLightingVisibility.V[3] / l0;
 
 	return NewSample;
 }

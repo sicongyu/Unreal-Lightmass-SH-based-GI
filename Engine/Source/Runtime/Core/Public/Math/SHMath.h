@@ -346,6 +346,17 @@ public:
 		return Result;
 	}
 
+	/** Get diffuse L1 convolved SH Basis, only valid for order 2. */
+	static inline TSHVector<2> SHBasisFunctionDiffuseL1(const FVector& Vector)
+	{
+		TSHVector<2> Result;
+		Result.V[0] = 0.25f;
+		Result.V[1] = 0.5f * Vector.X;
+		Result.V[2] = 0.5f * Vector.Y;
+		Result.V[3] = 0.5f * Vector.Z;
+		return Result;
+	}
+
 	/** Returns the value of the SH basis L,M at the point on the sphere defined by the unit vector Vector. */
 	static TSHVector SHBasisFunction(const FVector& Vector)
 	{
@@ -460,8 +471,6 @@ public:
 		return Lambda;
 	}
 } GCC_ALIGN(16);
-
-
 
 
 /** Specialization for 2nd order to avoid expensive trig functions. */

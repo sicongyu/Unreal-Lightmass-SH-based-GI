@@ -2944,7 +2944,8 @@ void FLightMap2D::Serialize(FArchive& Ar)
 				bool bStripHQLightmaps = !Ar.CookingTarget()->SupportsFeature(ETargetPlatformFeatures::HighQualityLightmaps) || bUsingVTLightmaps;
 
 				ULightMapTexture2D* Dummy = NULL;
-				ULightMapTexture2D*& SkyTexture = bStripHQLightmaps ? Dummy : SkyOcclusionTexture;
+				//ULightMapTexture2D*& SkyTexture = bStripHQLightmaps ? Dummy : SkyOcclusionTexture;
+				ULightMapTexture2D*& SkyTexture = SkyOcclusionTexture;
 				Ar << SkyTexture;
 
 				if (Ar.UE4Ver() >= VER_UE4_AO_MATERIAL_MASK)
@@ -3046,7 +3047,8 @@ void FLightMap2D::Serialize(FArchive& Ar)
 
 			if (!bAllowHighQualityLightMaps)
 			{
-				SkyOcclusionTexture = NULL;
+				// MYCODE: Always enable SkyOcclusion (Visibility in our case)
+				//SkyOcclusionTexture = NULL;
 				AOMaterialMaskTexture = NULL;
 			}
 

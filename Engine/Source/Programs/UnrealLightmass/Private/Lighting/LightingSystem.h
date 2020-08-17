@@ -2312,6 +2312,8 @@ private:
 		const FMinimalStaticLightingVertex& Vertex,
 		EHemisphereGatherClassification GatherClassification) const;
 
+	FSHVector2 CalculateSunSH(const FVector& WorldDirection, bool bDiscardDownVector) const;
+
 	void IntersectLightRays(
 		const FStaticLightingMapping* Mapping,
 		const FFullStaticLightingVertex& Vertex,

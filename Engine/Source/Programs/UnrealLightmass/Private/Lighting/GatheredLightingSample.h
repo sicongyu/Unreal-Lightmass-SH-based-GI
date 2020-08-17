@@ -31,7 +31,7 @@ public:
 	float AOMaterialMask;
 
 	// MYCODE
-	FSHVector2 SkyLightingVisibilityCoeff;
+	FSHVector2 SkyLightingVisibility;
 
 	/** Initialization constructor. */
 	TGatheredLightSample()
@@ -75,7 +75,7 @@ public:
 		Result.SkyOcclusion = SkyOcclusion * Scalar;
 		Result.AOMaterialMask = AOMaterialMask * Scalar;
 		// MYCODE
-		Result.SkyLightingVisibilityCoeff = SkyLightingVisibilityCoeff * Scalar;
+		Result.SkyLightingVisibility = SkyLightingVisibility * Scalar;
 		return Result;
 	}
 
@@ -88,7 +88,7 @@ public:
 		Result.SkyOcclusion = SkyOcclusion + SampleB.SkyOcclusion;
 		Result.AOMaterialMask = AOMaterialMask + SampleB.AOMaterialMask;
 		// MYCODE
-		Result.SkyLightingVisibilityCoeff = SkyLightingVisibilityCoeff + SampleB.SkyLightingVisibilityCoeff;
+		Result.SkyLightingVisibility = SkyLightingVisibility + SampleB.SkyLightingVisibility;
 		return Result;
 	}
 };

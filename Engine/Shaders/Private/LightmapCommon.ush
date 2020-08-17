@@ -145,6 +145,7 @@ void GetLightMapColorHQ( VTPageTableResult LightmapVTPageTableResult, float2 Lig
 #define LIGHTMAP_SHARED_SAMPLER( Sampler ) LightmapResourceCluster.Sampler
 #endif
 
+/* Attention: Code for extracting values from texture map */
 float4 GetSkyBentNormalAndOcclusion(VTPageTableResult LightmapVTPageTableResult, float2 LightmapUV, uint LightmapDataIndex, float2 SvPositionXY)
 {
 	float4 TextureValue;
@@ -154,10 +155,13 @@ float4 GetSkyBentNormalAndOcclusion(VTPageTableResult LightmapVTPageTableResult,
 	TextureValue = Texture2DSample( LightmapResourceCluster.SkyOcclusionTexture, LIGHTMAP_SHARED_SAMPLER(SkyOcclusionSampler), LightmapUV );
 #endif
 
-	// Unpack vector
-	TextureValue.rgb = TextureValue.rgb * 2 - 1;
-	// Undo sqrt which allocated more precision toward 0
-	TextureValue.a = TextureValue.a * TextureValue.a;
+	// // Unpack vector
+	// TextureValue.rgb = TextureValue.rgb * 2 - 1;
+	// // Undo sqrt which allocated more precision toward 0
+	// TextureValue.a = TextureValue.a * TextureValue.a;
+	TextureValue.a = (TextureValue.a * 2 - 1) * 10;
+	TextureValue.rgb = (TextureValue.rgb * 2 - 1) * TextureValue.a;
+	TextureValue.a = TextureValue.a / 2;
 	return TextureValue;
 }
 

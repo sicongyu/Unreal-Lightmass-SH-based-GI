@@ -268,6 +268,19 @@ float FStaticLightingSystem::EvaluateSkyVariance(const FVector4& IncomingDirecti
 	return Variance;
 }
 
+FSHVector2 FStaticLightingSystem::CalculateSunSH(const FVector& WorldDirection, bool bDiscardDownVector) const
+{
+	FSHVector2 ResSH;
+	if (bDiscardDownVector && WorldDirection.Z < 0.0f)
+	{
+		return ResSH;
+	}
+
+	ResSH = FSHVector2::SHBasisFunctionDiffuseL1(WorldDirection.GetSafeNormal());
+
+	return ResSH;
+}
+
 FSHVector2 FStaticLightingSystem::CalculateExitantVisibility(
 	const FStaticLightingMapping* HitMapping,
 	const FMinimalStaticLightingVertex& Vertex,
@@ -508,8 +521,7 @@ FLinearColor FStaticLightingSystem::FinalGatherSample(
 			const FLinearColor EnvironmentLighting = EvaluateEnvironmentLighting(-WorldPathDirection);
 			Lighting += EnvironmentLighting;
 			// MYCODE
-			FSHVector2 SampleBasis = FSHVector2::SHBasisFunction(TriangleTangentPathDirection);
-			OutVisibility = SampleBasis * 1.0f;
+			OutVisibility = CalculateSunSH(TriangleTangentPathDirection, true);
 		}
 	}
 
@@ -1398,7 +1410,7 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 
 	// MYCODE
 	const float MonteCarloFactor = 4.0 * PI / UniformHemisphereSamples.Num();
-	IncomingRadiance.SkyLightingVisibilityCoeff = AccumlatedSkyLightingVisiblitySample * MonteCarloFactor;
+	IncomingRadiance.SkyLightingVisibility = AccumlatedSkyLightingVisiblitySample * MonteCarloFactor;
 
 	return IncomingRadiance;
 }

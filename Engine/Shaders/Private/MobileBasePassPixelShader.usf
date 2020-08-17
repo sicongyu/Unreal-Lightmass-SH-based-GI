@@ -434,14 +434,20 @@ void Main(
 	half3 Color = 0;
 	half IndirectIrradiance = 1;
 
+	/* Attention: Macro segement for calculation */
 	#if LQ_TEXTURE_LIGHTMAP
 		float2 LightmapUV0, LightmapUV1;
 		uint LightmapDataIndex;
 		GetLightMapCoordinates(Interpolants, LightmapUV0, LightmapUV1, LightmapDataIndex);
 
 		half4 LightmapColor = GetLightMapColorLQ( LightmapUV0, LightmapUV1, LightmapDataIndex, MaterialParameters.WorldNormal );
-		Color += LightmapColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
-		IndirectIrradiance = LightmapColor.a;
+		half4 SHBasis;
+		SHBasis.rgb = 0.5 * MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.xyz;
+		SHBasis.a = 0.25;
+		float SunGI = max(0, dot(SHBasis, LightmapColor));
+		Color += SunGI * MobileDirectionalLight.DirectionalLightColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
+		// Color += LightmapColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
+		// IndirectIrradiance = LightmapColor.a;
 	#elif CACHED_POINT_INDIRECT_LIGHTING
 		#if MATERIALBLENDING_MASKED || MATERIALBLENDING_SOLID
 
@@ -494,7 +500,7 @@ void Main(
 			FPCFSamplerSettings Settings;
 			Settings.ShadowDepthTexture = MobileDirectionalLight.DirectionalLightShadowTexture;
 			Settings.ShadowDepthTextureSampler = MobileDirectionalLight.DirectionalLightShadowSampler;
-			Settings.TransitionScale = MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.w;
+			Settings.TransitionScale = MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.w; /* DirectionalLightDirectionAndShadowTransition.xyz, Light Direction*/
 			Settings.ShadowBufferSize = MobileDirectionalLight.DirectionalLightShadowSize;
 			Settings.bSubsurface = false;
 			Settings.bTreatMaxDepthUnshadowed = false;
@@ -550,6 +556,7 @@ void Main(
 		float NoH = max(0,dot(MaterialParameters.WorldNormal, H));
 
 		#if FULLY_ROUGH
+			/* Color of the Sunlight */
 			Color += (Shadow * NoL) * MobileDirectionalLight.DirectionalLightColor.rgb * DiffuseColor;
 		#else
 			Color += (Shadow * NoL) * MobileDirectionalLight.DirectionalLightColor.rgb * (DiffuseColor + SpecularColor * CalcSpecular(Roughness, RoL, NoH, H, MaterialParameters.WorldNormal));

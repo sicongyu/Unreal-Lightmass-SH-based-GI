@@ -51,7 +51,7 @@ void TGatheredLightSample<SHOrder>::AddWeighted(const TGatheredLightSample<SHOrd
 	SkyOcclusion += OtherSample.SkyOcclusion * Weight;
 	AOMaterialMask += OtherSample.AOMaterialMask * Weight;
 	// MYCODE
-	SkyLightingVisibilityCoeff += OtherSample.SkyLightingVisibilityCoeff * Weight;
+	SkyLightingVisibility += OtherSample.SkyLightingVisibility * Weight;
 }
 template void TGatheredLightSample<2>::AddWeighted(const TGatheredLightSample<2>& OtherSample, float Weight);
 template void TGatheredLightSample<3>::AddWeighted(const TGatheredLightSample<3>& OtherSample, float Weight);

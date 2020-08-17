@@ -267,13 +267,13 @@ namespace Lightmass
 			const float BentNormalLength = BentNormal.Size();
 			const FVector NormalizedBentNormal = BentNormal.GetSafeNormal() * FVector(.5f) + FVector(.5f);
 
-			// MYCODE: Projecting SH Coeffs into a static range, and replace with 
-			const FVector4 MappedSHCoeff = SourceSample.SkyLightingVisibility.ConvertToVector4() / 5.0f;
+			// MYCODE: Projecting SH Coeffs into a static range
+			//const FVector4 MappedSHCoeff = SourceSample.SkyLightingVisibility.ConvertToVector4() / 5.0f;
 
-			DestCoefficients.SkyOcclusion[0] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(FMath::Abs(MappedSHCoeff[0]) * 255.0f), 0, 255);
-			DestCoefficients.SkyOcclusion[1] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(FMath::Abs(MappedSHCoeff[1]) * 255.0f), 0, 255);
-			DestCoefficients.SkyOcclusion[2] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(FMath::Abs(MappedSHCoeff[2]) * 255.0f), 0, 255);
-			DestCoefficients.SkyOcclusion[3] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(FMath::Abs(MappedSHCoeff[3]) * 255.0f), 0, 255);
+			DestCoefficients.SkyOcclusion[3] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility.V[0] / 10.f) + 1.0f) / 2.0f * 255.0f, 0, 255);
+			DestCoefficients.SkyOcclusion[0] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(SourceSample.SkyLightingVisibility.V[1] + 1.0f) / 2.0f * 255.0f, 0, 255);
+			DestCoefficients.SkyOcclusion[1] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(SourceSample.SkyLightingVisibility.V[2] + 1.0f) / 2.0f * 255.0f, 0, 255);
+			DestCoefficients.SkyOcclusion[2] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(SourceSample.SkyLightingVisibility.V[3] + 1.0f) / 2.0f * 255.0f, 0, 255);
 
 
 			//DestCoefficients.SkyOcclusion[0] = (uint8)FMath::Clamp<int32>( FMath::RoundToInt( NormalizedBentNormal[0] * 255.0f ), 0, 255 );
