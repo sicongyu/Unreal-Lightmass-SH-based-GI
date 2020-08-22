@@ -521,7 +521,7 @@ FLinearColor FStaticLightingSystem::FinalGatherSample(
 			const FLinearColor EnvironmentLighting = EvaluateEnvironmentLighting(-WorldPathDirection);
 			Lighting += EnvironmentLighting;
 			// MYCODE
-			OutVisibility = CalculateSunSH(TriangleTangentPathDirection, true);
+			OutVisibility = CalculateSunSH(WorldPathDirection, true);
 		}
 	}
 
@@ -1064,7 +1064,7 @@ public:
 							FFinalGatherHitPoint HitPoint;
 
 							// MYCODE: Padding variable for SH. TODO: Fix the SH into Refinement
-							FSHVector2 UnusedOutVisibility;
+							FSHVector2 SkyLightingVisibility;
 							FVector4 UnusedTriangleTangentpathDirection;
 
 							const FLinearColor SubsampleLighting = LightingSystem.FinalGatherSample(
@@ -1086,7 +1086,7 @@ public:
 								HitPoint,
 								UnoccludedSkyVector,
 								StationarySkyLighting,
-								UnusedOutVisibility,
+								SkyLightingVisibility,
 								UnusedTriangleTangentpathDirection);
 
 							int32 StoredHitPointIndex = -1;
@@ -1098,7 +1098,7 @@ public:
 								SubsampleGatherInfo.HitPointRecorder->GatherHitPointData.Add(HitPoint);
 							}
 
-							FreeNode->Element = FRefinementElement(FLightingAndOcclusion(SubsampleLighting, UnoccludedSkyVector, StationarySkyLighting, SubsampleFinalGatherInfo.NumSamplesOccluded), FVector2D(Fraction1, Fraction2), StoredHitPointIndex);
+							FreeNode->Element = FRefinementElement(FLightingAndOcclusion(SubsampleLighting, UnoccludedSkyVector, StationarySkyLighting, SubsampleFinalGatherInfo.NumSamplesOccluded, SkyLightingVisibility), FVector2D(Fraction1, Fraction2), StoredHitPointIndex);
 
 							Stats.NumRefiningFinalGatherSamples[RefinementDepth]++;
 
@@ -1297,7 +1297,7 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 			}
 
 			NumBackfaceHits += FinalGatherInfo.NumBackfaceHits;
-			RefinementGrid.SetRootElement(ThetaIndex, PhiIndex, FRefinementElement(FLightingAndOcclusion(Radiance, UnoccludedSkyVector, StationarySkyLighting, FinalGatherInfo.NumSamplesOccluded), UniformHemisphereSampleUniforms[SampleIndex], StoredHitPointIndex));
+			RefinementGrid.SetRootElement(ThetaIndex, PhiIndex, FRefinementElement(FLightingAndOcclusion(Radiance, UnoccludedSkyVector, StationarySkyLighting, FinalGatherInfo.NumSamplesOccluded, SkyLightingVisibility), UniformHemisphereSampleUniforms[SampleIndex], StoredHitPointIndex));
 			// MYCODE
 			AccumlatedSkyLightingVisiblitySample += SkyLightingVisibility;
 		}
@@ -1391,6 +1391,8 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 			IncomingRadiance.AddIncomingStationarySkyLight(FilteredLighting.StationarySkyLighting, SampleWeight, TangentPathDirection, WorldPathDirection);
 			checkSlow(IncomingRadiance.AreFloatsValid());
 			NumSamplesOccluded += FilteredLighting.NumSamplesOccluded;
+			// MYCODE
+			//AccumlatedSkyLightingVisiblitySample += FilteredLighting.SkyLightingVisibility;
 		}
 	}
 
@@ -1409,7 +1411,7 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 	RefinementGrid.ReturnToFreeList(MappingContext.RefinementTreeFreePool);
 
 	// MYCODE
-	const float MonteCarloFactor = 4.0 * PI / UniformHemisphereSamples.Num();
+	const float MonteCarloFactor = 4.0 * (float) PI / UniformHemisphereSamples.Num();
 	IncomingRadiance.SkyLightingVisibility = AccumlatedSkyLightingVisiblitySample * MonteCarloFactor;
 
 	return IncomingRadiance;

@@ -159,7 +159,18 @@ float4 GetSkyBentNormalAndOcclusion(VTPageTableResult LightmapVTPageTableResult,
 	// TextureValue.rgb = TextureValue.rgb * 2 - 1;
 	// // Undo sqrt which allocated more precision toward 0
 	// TextureValue.a = TextureValue.a * TextureValue.a;
-	TextureValue.a = (TextureValue.a * 2 - 1) * 10;
+	TextureValue.rgb = (TextureValue.rgb * 2 - 1) * TextureValue.a;
+	TextureValue.a = TextureValue.a / 2;
+	return TextureValue;
+}
+
+// MYCODE: Simplified Get Occlusion from texture
+float4 GetSkyOcclusion(float2 LightmapUV)
+{
+	float4 TextureValue;
+	TextureValue = Texture2DSample( LightmapResourceCluster.SkyOcclusionTexture, LIGHTMAP_SHARED_SAMPLER(SkyOcclusionSampler), LightmapUV );
+
+	TextureValue.a = TextureValue.a * 3;
 	TextureValue.rgb = (TextureValue.rgb * 2 - 1) * TextureValue.a;
 	TextureValue.a = TextureValue.a / 2;
 	return TextureValue;

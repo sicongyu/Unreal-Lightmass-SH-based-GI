@@ -82,6 +82,10 @@ FLightSample FGatheredLightMapSample::ConvertToLightSample(bool bDebugThisSample
 	NewSample.SkyLightingVisibility.V[1] = l0 == 0.0f ? l0 : HighQuality.SkyLightingVisibility.V[1] / l0;
 	NewSample.SkyLightingVisibility.V[2] = l0 == 0.0f ? l0 : HighQuality.SkyLightingVisibility.V[2] / l0;
 	NewSample.SkyLightingVisibility.V[3] = l0 == 0.0f ? l0 : HighQuality.SkyLightingVisibility.V[3] / l0;
+	//NewSample.SkyLightingVisibility.V[0] = HighQuality.SkyLightingVisibility.V[0];
+	//NewSample.SkyLightingVisibility.V[1] = HighQuality.SkyLightingVisibility.V[1];
+	//NewSample.SkyLightingVisibility.V[2] = HighQuality.SkyLightingVisibility.V[2];
+	//NewSample.SkyLightingVisibility.V[3] = HighQuality.SkyLightingVisibility.V[3];
 
 	return NewSample;
 }
@@ -96,6 +100,10 @@ FLightMapData2D* FGatheredLightMapData2D::ConvertToLightmap2D(bool bDebugThisMap
 	{
 		const bool bDebugThisSample = bDebugThisMapping && SampleIndex == PaddedDebugY * SizeX + PaddedDebugX;
 		(*ConvertedLightMap)(SampleIndex, 0) = Data[SampleIndex].ConvertToLightSample(bDebugThisSample);
+		if (SampleIndex == 31026)
+		{
+			continue;
+		}
 	}
 	return ConvertedLightMap;
 }

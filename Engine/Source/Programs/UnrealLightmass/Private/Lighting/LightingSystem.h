@@ -1239,29 +1239,41 @@ public:
 	FVector UnoccludedSkyVector;
 	FLinearColor StationarySkyLighting;
 	float NumSamplesOccluded;
+	//MYCODE
+	FSHVector2 SkyLightingVisibility;
 
 	FLightingAndOcclusion() :
 		Lighting(ForceInit),
 		UnoccludedSkyVector(FVector(0)),
 		StationarySkyLighting(FLinearColor::Black),
-		NumSamplesOccluded(0)
+		NumSamplesOccluded(0),
+		SkyLightingVisibility(FSHVector2())
 	{}
 
-	FLightingAndOcclusion(const FLinearColor& InLighting, FVector InUnoccludedSkyVector, const FLinearColor& InStationarySkyLighting, float InNumSamplesOccluded) : 
+	FLightingAndOcclusion(const FLinearColor& InLighting, FVector InUnoccludedSkyVector, const FLinearColor& InStationarySkyLighting, float InNumSamplesOccluded) :
 		Lighting(InLighting),
 		UnoccludedSkyVector(InUnoccludedSkyVector),
 		StationarySkyLighting(InStationarySkyLighting),
-		NumSamplesOccluded(InNumSamplesOccluded)
+		NumSamplesOccluded(InNumSamplesOccluded),
+		SkyLightingVisibility(FSHVector2())
+	{}
+
+	FLightingAndOcclusion(const FLinearColor& InLighting, FVector InUnoccludedSkyVector, const FLinearColor& InStationarySkyLighting, float InNumSamplesOccluded, const FSHVector2& InSkyLightingVisibility) : 
+		Lighting(InLighting),
+		UnoccludedSkyVector(InUnoccludedSkyVector),
+		StationarySkyLighting(InStationarySkyLighting),
+		NumSamplesOccluded(InNumSamplesOccluded),
+		SkyLightingVisibility(InSkyLightingVisibility)
 	{}
 
 	friend inline FLightingAndOcclusion operator+ (const FLightingAndOcclusion& A, const FLightingAndOcclusion& B)
 	{
-		return FLightingAndOcclusion(A.Lighting + B.Lighting, A.UnoccludedSkyVector + B.UnoccludedSkyVector, A.StationarySkyLighting + B.StationarySkyLighting, A.NumSamplesOccluded + B.NumSamplesOccluded);
+		return FLightingAndOcclusion(A.Lighting + B.Lighting, A.UnoccludedSkyVector + B.UnoccludedSkyVector, A.StationarySkyLighting + B.StationarySkyLighting, A.NumSamplesOccluded + B.NumSamplesOccluded, A.SkyLightingVisibility + B.SkyLightingVisibility);
 	}
 
 	friend inline FLightingAndOcclusion operator/ (const FLightingAndOcclusion& A, float Divisor)
 	{
-		return FLightingAndOcclusion(A.Lighting / Divisor, A.UnoccludedSkyVector / Divisor, A.StationarySkyLighting / Divisor, A.NumSamplesOccluded / Divisor);
+		return FLightingAndOcclusion(A.Lighting / Divisor, A.UnoccludedSkyVector / Divisor, A.StationarySkyLighting / Divisor, A.NumSamplesOccluded / Divisor, A.SkyLightingVisibility / Divisor);
 	}
 };
 

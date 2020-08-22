@@ -441,13 +441,16 @@ void Main(
 		GetLightMapCoordinates(Interpolants, LightmapUV0, LightmapUV1, LightmapDataIndex);
 
 		half4 LightmapColor = GetLightMapColorLQ( LightmapUV0, LightmapUV1, LightmapDataIndex, MaterialParameters.WorldNormal );
-		half4 SHBasis;
-		SHBasis.rgb = 0.5 * MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.xyz;
-		SHBasis.a = 0.25;
-		float SunGI = max(0, dot(SHBasis, LightmapColor));
+		//----------MYCODE START---------
+		float4 VisiblityCoeff = GetSkyOcclusion(LightmapUV0);
+		float4 SHBasis;
+		SHBasis.rgb = MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.xyz;
+		SHBasis.a = 1;
+		float SunGI = max(0, dot(SHBasis, VisiblityCoeff));
 		Color += SunGI * MobileDirectionalLight.DirectionalLightColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
-		// Color += LightmapColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
-		// IndirectIrradiance = LightmapColor.a;
+		//----------MYCODE END---------
+		Color += LightmapColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
+		IndirectIrradiance = LightmapColor.a;
 	#elif CACHED_POINT_INDIRECT_LIGHTING
 		#if MATERIALBLENDING_MASKED || MATERIALBLENDING_SOLID
 
