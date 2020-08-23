@@ -295,10 +295,15 @@ FSHVector2 FStaticLightingSystem::CalculateExitantVisibility(
 		AccumulatedVisibility += Visibility;
 	}
 
-	else if (GatherClassification == GLM_FinalGather)
+	if (GatherClassification & GLM_GatherLightFinalBounced)
 	{
-		AccumulatedVisibility += HitMapping->AccumaltedSkyLightingVisibility[HitMapping->GetSurfaceCacheIndex(Vertex)];
+		AccumulatedVisibility += HitMapping->GetSurfaceCacheVisibility(Vertex);
 	}
+
+	//else if (GatherClassification == GLM_FinalGather)
+	//{
+	//	AccumulatedVisibility += HitMapping->AccumaltedSkyLightingVisibility[HitMapping->GetSurfaceCacheIndex(Vertex)];
+	//}
 
 	return AccumulatedVisibility;
 }
@@ -1299,7 +1304,7 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 			NumBackfaceHits += FinalGatherInfo.NumBackfaceHits;
 			RefinementGrid.SetRootElement(ThetaIndex, PhiIndex, FRefinementElement(FLightingAndOcclusion(Radiance, UnoccludedSkyVector, StationarySkyLighting, FinalGatherInfo.NumSamplesOccluded, SkyLightingVisibility), UniformHemisphereSampleUniforms[SampleIndex], StoredHitPointIndex));
 			// MYCODE
-			AccumlatedSkyLightingVisiblitySample += SkyLightingVisibility;
+			//AccumlatedSkyLightingVisiblitySample += SkyLightingVisibility;
 		}
 	}
 
@@ -1393,6 +1398,7 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 			NumSamplesOccluded += FilteredLighting.NumSamplesOccluded;
 			// MYCODE
 			//AccumlatedSkyLightingVisiblitySample += FilteredLighting.SkyLightingVisibility;
+			IncomingRadiance.AddIncomingVisibility(FilteredLighting.SkyLightingVisibility, SampleWeight, TangentPathDirection, WorldPathDirection);
 		}
 	}
 
@@ -1411,8 +1417,8 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 	RefinementGrid.ReturnToFreeList(MappingContext.RefinementTreeFreePool);
 
 	// MYCODE
-	const float MonteCarloFactor = 4.0 * (float) PI / UniformHemisphereSamples.Num();
-	IncomingRadiance.SkyLightingVisibility = AccumlatedSkyLightingVisiblitySample * MonteCarloFactor;
+	//const float MonteCarloFactor = 4.0 * (float) PI / UniformHemisphereSamples.Num();
+	//IncomingRadiance.SkyLightingVisibility = AccumlatedSkyLightingVisiblitySample * MonteCarloFactor;
 
 	return IncomingRadiance;
 }

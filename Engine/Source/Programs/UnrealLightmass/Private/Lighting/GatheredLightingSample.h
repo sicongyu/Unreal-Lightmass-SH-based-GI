@@ -112,6 +112,9 @@ public:
 	*/
 	template <int32 SHOrder>
 	static TGatheredLightSample<SHOrder> PointLightWorldSpace(const FLinearColor& Color, const FVector4& TangentDirection, const FVector4& WorldDirection);
+
+	template <int32 SHOrder>
+	static TGatheredLightSample<SHOrder> PointSunSHWorldSpace(const FSHVector2& SunSH, const FVector4& TangentDirection, const FVector4& WorldDirection);
 };
 
 typedef TGatheredLightSample<2> FGatheredLightSample;
@@ -220,6 +223,11 @@ public:
 	inline void AddIncomingStationarySkyLight(const FLinearColor& IncomingSkyLight, float Weight, const FVector4& TangentSpaceDirection, const FVector4& WorldSpaceDirection)
 	{
 		StationarySkyLighting.AddWeighted(FGatheredLightSampleUtil::PointLightWorldSpace<SHOrder>(IncomingSkyLight, TangentSpaceDirection, WorldSpaceDirection), Weight);
+	}
+
+	inline void AddIncomingVisibility(const FSHVector2& IncomingVisibility, float Weight, const FVector4& TangentSpaceDirection, const FVector4& WorldSpaceDirection)
+	{
+		AddWeighted(FGatheredLightSampleUtil::PointSunSHWorldSpace<SHOrder>(IncomingVisibility, TangentSpaceDirection, WorldSpaceDirection), Weight);
 	}
 
 	bool AreFloatsValid() const;

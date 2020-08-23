@@ -424,6 +424,12 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 				FLinearColor IncidentLighting = FLinearColor::Black;
 				FLinearColor IncidentLightingForRadiosity = FLinearColor::Black;
 
+				FSHVector2 IncidentSunSH;
+				FSHVector2 IncidentSunSHForCache;
+
+				const bool bIsTranslucent = TextureMapping->Mesh->IsTranslucent(TexelToVertex.ElementIndex);
+				const FLinearColor Reflectance = (bIsTranslucent ? FLinearColor::Black : TextureMapping->Mesh->EvaluateTotalReflectance(CurrentVertex, TexelToVertex.ElementIndex)) * (float)INV_PI;
+
 				if (GeneralSettings.NumSkyLightingBounces > 0)
 				{
 					FFinalGatherSample SkyLighting;
@@ -435,13 +441,15 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 					{
 						IncidentLighting += SkyLighting.IncidentLighting + SkyLighting.StationarySkyLighting.IncidentLighting;
 						// MYCODE
-						TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex] += SkyLighting.SkyLightingVisibility;
+						IncidentSunSH += SkyLighting.SkyLightingVisibility * Reflectance.GetLuminance();
+						//TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex] += SkyLighting.SkyLightingVisibility;
 					}
 
 					IncidentLightingForRadiosity += SkyLighting.IncidentLighting + SkyLighting.StationarySkyLighting.IncidentLighting;
+					IncidentSunSHForCache += SkyLighting.SkyLightingVisibility * Reflectance.GetLuminance();
 
 					// MYCODE: 储存由Interpolation/Adaptive Final Gather 得到的SH2Coeff
-					TextureMapping->SkyLightingVisibility[0][SurfaceCacheIndex] = SkyLighting.SkyLightingVisibility;
+					//TextureMapping->SkyLightingVisibility[0][SurfaceCacheIndex] = SkyLighting.SkyLightingVisibility;
 				}
 				
 				// bUseRadiositySolverForLightMultibounce 重要的参数，用radiosity替代photons
@@ -457,10 +465,14 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 					CalculateApproximateDirectLighting(CurrentVertex, TexelToVertex.TexelRadius, VertexOffsets, .1f, true, true, bDebugThisTexel, MappingContext, DirectLighting, Unused, Unused2);
 
 					IncidentLightingForRadiosity += DirectLighting.IncidentLighting;
+					IncidentSunSHForCache += DirectLighting.SkyLightingVisibility * Reflectance.GetLuminance();
 				}
 				
 				TextureMapping->SurfaceCacheLighting[SurfaceCacheIndex] = IncidentLighting;
 				TextureMapping->RadiositySurfaceCache[0][SurfaceCacheIndex] = IncidentLightingForRadiosity;
+
+				TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex] = IncidentSunSH;
+				TextureMapping->SkyLightingVisibility[0][SurfaceCacheIndex] = IncidentSunSHForCache;
 			}
 		}
 	}

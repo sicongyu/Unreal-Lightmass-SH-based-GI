@@ -3821,6 +3821,13 @@ FLinearColor FStaticLightingTextureMapping::GetSurfaceCacheLighting(const FMinim
 	return Lighting;
 }
 
+FSHVector2 FStaticLightingTextureMapping::GetSurfaceCacheVisibility(const FMinimalStaticLightingVertex& Vertex) const
+{
+	int32 SurfaceCacheIndex = GetSurfaceCacheIndex(Vertex);
+	FSHVector2 Visibility = AccumaltedSkyLightingVisibility[SurfaceCacheIndex];
+	return Visibility;
+}
+
 int32 FStaticLightingTextureMapping::GetSurfaceCacheIndex(const struct FMinimalStaticLightingVertex& Vertex) const
 {
 	checkSlow(SurfaceCacheSizeX > 0 && SurfaceCacheSizeY > 0);

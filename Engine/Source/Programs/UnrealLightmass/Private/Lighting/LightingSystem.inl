@@ -20,6 +20,19 @@ TGatheredLightSample<SHOrder> FGatheredLightSampleUtil::AmbientLight(const FLine
 }
 
 template<int32 SHOrder>
+TGatheredLightSample<SHOrder> FGatheredLightSampleUtil::PointSunSHWorldSpace(const FSHVector2& SunSH, const FVector4& TangentDirection, const FVector4& WorldDirection)
+{
+    TGatheredLightSample<SHOrder> Result;
+
+    if (TangentDirection.Z >= 0.0f)
+    {
+            Result.SkyLightingVisibility = SunSH * FMath::Max(0.0f, TangentDirection.Z);
+    }
+	
+    return Result;
+}
+
+template<int32 SHOrder>
 TGatheredLightSample<SHOrder> FGatheredLightSampleUtil::PointLightWorldSpace(const FLinearColor& Color, const FVector4& TangentDirection, const FVector4& WorldDirection)
 {
 	TGatheredLightSample<SHOrder> Result;
@@ -62,6 +75,7 @@ void TGatheredLightSample<SHOrder>::ApplyOcclusion(float Occlusion)
 	SHVector *= Occlusion;
 	SHCorrection *= Occlusion;
 	IncidentLighting *= Occlusion;
+	SkyLightingVisibility *= Occlusion;
 }
 template void TGatheredLightSample<2>::ApplyOcclusion(float Occlusion);
 template void TGatheredLightSample<3>::ApplyOcclusion(float Occlusion);
@@ -71,7 +85,8 @@ bool TGatheredLightSample<SHOrder>::AreFloatsValid() const
 {
 	return SHVector.AreFloatsValid()
 		&& FMath::IsFinite(SHCorrection) && !FMath::IsNaN(SHCorrection)
-		&& FLinearColorUtils::AreFloatsValid(IncidentLighting);
+		&& FLinearColorUtils::AreFloatsValid(IncidentLighting)
+		&& SkyLightingVisibility.AreFloatsValid();
 }
 template bool TGatheredLightSample<2>::AreFloatsValid() const;
 template bool TGatheredLightSample<3>::AreFloatsValid() const;
@@ -205,12 +220,17 @@ void FStaticLightingSystem::CalculateApproximateDirectLighting(
 				// Compute the incident lighting of the light on the vertex.
 				const FLinearColor FinalIntensity = LightIntensity * Transmission;
 
+				// Compute SunSH
+				const FSHVector2 SunSH = CalculateSunSH(UnitWorldLightVector.GetSafeNormal(), false) * FinalIntensity.GetLuminance();
+
 				// Compute the light-map sample for the front-face of the vertex.
 				TGatheredLightSample<SHOrder> Lighting = FGatheredLightSampleUtil::PointLightWorldSpace<SHOrder>(FinalIntensity, TangentLightVector, WorldLightVector.GetSafeNormal());
 
+				TGatheredLightSample<SHOrder> LightingSH = FGatheredLightSampleUtil::PointSunSHWorldSpace<SHOrder>(SunSH, TangentLightVector, UnitWorldLightVector);
+
 				if (Light->UseStaticLighting() || bCompositeAllLights)
 				{
-					OutStaticDirectLighting = OutStaticDirectLighting + Lighting;
+					OutStaticDirectLighting = OutStaticDirectLighting + Lighting + LightingSH;
 				}
 				else if (Light->GetDirectionalLight() != NULL)
 				{

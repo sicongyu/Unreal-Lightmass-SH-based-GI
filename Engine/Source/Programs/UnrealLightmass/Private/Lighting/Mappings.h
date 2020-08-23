@@ -166,6 +166,8 @@ public:
 
 	virtual FLinearColor GetSurfaceCacheLighting(const FMinimalStaticLightingVertex& Vertex) const = 0;
 
+	virtual FSHVector2 GetSurfaceCacheVisibility(const FMinimalStaticLightingVertex& Vertex) const = 0;
+
 	virtual int32 GetSurfaceCacheIndex(const struct FMinimalStaticLightingVertex& Vertex) const = 0;
 	FLinearColor GetCachedRadiosity(int32 RadiosityBufferIndex, int32 SurfaceCacheIndex) const;
 	size_t FreeRadiosityTemporaries();
@@ -213,6 +215,8 @@ public:
 	}
 
 	virtual FLinearColor GetSurfaceCacheLighting(const FMinimalStaticLightingVertex& Vertex) const override;
+
+	virtual FSHVector2 GetSurfaceCacheVisibility(const FMinimalStaticLightingVertex& Vertex) const override;
 
 	virtual int32 GetSurfaceCacheIndex(const struct FMinimalStaticLightingVertex& Vertex) const;
 
