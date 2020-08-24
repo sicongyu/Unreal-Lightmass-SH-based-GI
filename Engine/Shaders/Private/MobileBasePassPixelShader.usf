@@ -447,6 +447,7 @@ void Main(
 		SHBasis.rgb = MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.xyz;
 		SHBasis.a = 1;
 		float SunGI = max(0, dot(SHBasis, VisiblityCoeff));
+		// Color += SunGI * MobileDirectionalLight.DirectionalLightColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
 		Color += SunGI * MobileDirectionalLight.DirectionalLightColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
 		//----------MYCODE END---------
 		Color += LightmapColor.rgb * DiffuseColor * View.IndirectLightingColorScale;

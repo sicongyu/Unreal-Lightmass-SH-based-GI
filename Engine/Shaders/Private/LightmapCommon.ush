@@ -168,9 +168,11 @@ float4 GetSkyBentNormalAndOcclusion(VTPageTableResult LightmapVTPageTableResult,
 float4 GetSkyOcclusion(float2 LightmapUV)
 {
 	float4 TextureValue;
-	TextureValue = Texture2DSample( LightmapResourceCluster.SkyOcclusionTexture, LIGHTMAP_SHARED_SAMPLER(SkyOcclusionSampler), LightmapUV );
+	float2 VisibilityLightmapUV = LightmapUV;
+	VisibilityLightmapUV.y = VisibilityLightmapUV.y * 2;
+	TextureValue = Texture2DSample( LightmapResourceCluster.SkyOcclusionTexture, LIGHTMAP_SHARED_SAMPLER(SkyOcclusionSampler), VisibilityLightmapUV );
 
-	TextureValue.a = TextureValue.a * 3;
+	TextureValue.a = TextureValue.a * TextureValue.a;
 	TextureValue.rgb = (TextureValue.rgb * 2 - 1) * TextureValue.a;
 	TextureValue.a = TextureValue.a / 2;
 	return TextureValue;

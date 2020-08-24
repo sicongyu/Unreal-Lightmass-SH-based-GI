@@ -649,6 +649,10 @@ void FStaticLightingSystem::FinalizeSurfaceCacheTextureMapping(FStaticLightingTe
 				// SurfaceCacheLighting at this point contains 1st and up bounce lighting for the skylight and emissive sources, computed by the radiosity iterations
 				FinalIncidentLighting += TextureMapping->SurfaceCacheLighting[SurfaceCacheIndex];
 
+				FSHVector2 FinalIncidentVisibility;
+
+				FinalIncidentVisibility += TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex];
+
 				if ((GeneralSettings.ViewSingleBounceNumber < 0 || GeneralSettings.ViewSingleBounceNumber >= 2)
 					&& !ImportanceTracingSettings.bUseRadiositySolverForLightMultibounce
 					&& PhotonMappingSettings.bUseIrradiancePhotons)
@@ -672,6 +676,7 @@ void FStaticLightingSystem::FinalizeSurfaceCacheTextureMapping(FStaticLightingTe
 
 					CalculateApproximateDirectLighting(CurrentVertex, TexelToVertex.TexelRadius, VertexOffsets, .1f, true, true, bDebugThisTexel && PhotonMappingSettings.bVisualizeCachedApproximateDirectLighting, MappingContext, DirectLighting, Unused, Unused2);
 					FinalIncidentLighting += DirectLighting.IncidentLighting;
+					FinalIncidentVisibility += DirectLighting.SkyLightingVisibility;
 				}
 
 				const bool bTranslucent = TextureMapping->Mesh->IsTranslucent(TexelToVertex.ElementIndex);
@@ -680,7 +685,7 @@ void FStaticLightingSystem::FinalizeSurfaceCacheTextureMapping(FStaticLightingTe
 				TextureMapping->SurfaceCacheLighting[SurfaceCacheIndex] = FinalIncidentLighting * Reflectance;
 				// MYCODE
 				const float VisiblityReflectance = Reflectance.GetLuminance();
-				TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex] *= VisiblityReflectance;
+				TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex] = FinalIncidentVisibility * VisiblityReflectance;
 			}
 		}
 	}

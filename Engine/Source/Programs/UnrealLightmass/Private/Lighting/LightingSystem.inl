@@ -220,6 +220,8 @@ void FStaticLightingSystem::CalculateApproximateDirectLighting(
 				// Compute the incident lighting of the light on the vertex.
 				const FLinearColor FinalIntensity = LightIntensity * Transmission;
 
+				const FVector4 UnitWorldLightVector = WorldLightVector.GetSafeNormal();
+
 				// Compute SunSH
 				const FSHVector2 SunSH = CalculateSunSH(UnitWorldLightVector.GetSafeNormal(), false) * FinalIntensity.GetLuminance();
 

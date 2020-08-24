@@ -439,13 +439,13 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 
 					if (GeneralSettings.ViewSingleBounceNumber < 0 || GeneralSettings.ViewSingleBounceNumber == 1)
 					{
-						IncidentLighting += SkyLighting.IncidentLighting + SkyLighting.StationarySkyLighting.IncidentLighting;
+						IncidentLighting += (SkyLighting.IncidentLighting + SkyLighting.StationarySkyLighting.IncidentLighting) * Reflectance;
 						// MYCODE
 						IncidentSunSH += SkyLighting.SkyLightingVisibility * Reflectance.GetLuminance();
 						//TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex] += SkyLighting.SkyLightingVisibility;
 					}
 
-					IncidentLightingForRadiosity += SkyLighting.IncidentLighting + SkyLighting.StationarySkyLighting.IncidentLighting;
+					IncidentLightingForRadiosity += (SkyLighting.IncidentLighting + SkyLighting.StationarySkyLighting.IncidentLighting) * Reflectance;
 					IncidentSunSHForCache += SkyLighting.SkyLightingVisibility * Reflectance.GetLuminance();
 
 					// MYCODE: 储存由Interpolation/Adaptive Final Gather 得到的SH2Coeff
@@ -464,7 +464,7 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 					// From LightingSystem.inl 似乎是Radiosity区别于普通Irradiance Cache的重要依据：Radiosity还要采样直接光照
 					CalculateApproximateDirectLighting(CurrentVertex, TexelToVertex.TexelRadius, VertexOffsets, .1f, true, true, bDebugThisTexel, MappingContext, DirectLighting, Unused, Unused2);
 
-					IncidentLightingForRadiosity += DirectLighting.IncidentLighting;
+					IncidentLightingForRadiosity += DirectLighting.IncidentLighting * Reflectance;
 					IncidentSunSHForCache += DirectLighting.SkyLightingVisibility * Reflectance.GetLuminance();
 				}
 				
