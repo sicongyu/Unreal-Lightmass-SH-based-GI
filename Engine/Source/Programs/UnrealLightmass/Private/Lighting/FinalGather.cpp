@@ -276,7 +276,13 @@ FSHVector2 FStaticLightingSystem::CalculateSunSH(const FVector& WorldDirection, 
 		return ResSH;
 	}
 
-	ResSH = FSHVector2::SHBasisFunctionDiffuseL1(WorldDirection.GetSafeNormal());
+
+	const FVector SunSHX(0.81649658092772603273242802490196f, 0.0f, 0.57735026918962576450914878050196f);
+	const FVector SunSHY(-0.40824829046386301636621401245098f, -0.70710678118654752440084436210485f, 0.57735026918962576450914878050196f);
+	const FVector SunSHZ(-0.40824829046386301636621401245098f, 0.70710678118654752440084436210485f, 0.57735026918962576450914878050196f);
+	const FVector SunSHW;
+	const FMatrix SunSHCoord(SunSHX, SunSHY, SunSHZ, SunSHW);
+	ResSH = FSHVector2::SHBasisFunctionDiffuseL1(SunSHCoord.TransformVector(WorldDirection.GetSafeNormal()));
 
 	return ResSH;
 }

@@ -444,7 +444,12 @@ void Main(
 		//----------MYCODE START---------
 		float4 VisiblityCoeff = GetSkyOcclusion(LightmapUV0);
 		float4 SHBasis;
-		SHBasis.rgb = MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.xyz;
+		matrix <float, 3, 3> SunSHAxis = { 0.81649658092772603273242802490196f, -0.40824829046386301636621401245098f, -0.40824829046386301636621401245098f, // row 1
+                                 			0.0f, -0.70710678118654752440084436210485f, 0.70710678118654752440084436210485f, // row 2
+											 0.57735026918962576450914878050196f, 0.57735026918962576450914878050196f, 0.57735026918962576450914878050196f
+
+                               };
+		SHBasis.rgb = mul(SunSHAxis, MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.xyz);
 		SHBasis.a = 1;
 		float SunGI = max(0, dot(SHBasis, VisiblityCoeff));
 		// Color += SunGI * MobileDirectionalLight.DirectionalLightColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
