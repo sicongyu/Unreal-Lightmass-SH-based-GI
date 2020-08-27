@@ -78,10 +78,18 @@ FLightSample FGatheredLightMapSample::ConvertToLightSample(bool bDebugThisSample
 	// MYCODE: Orders stored in FLightSample: [1][2][3][0]
 	//NewSample.SkyLightingVisibility = HighQuality.SkyLightingVisibility;
 	float l0 = HighQuality.SkyLightingVisibility.V[0] * 2.0f;
-	NewSample.SkyLightingVisibility.V[0] = l0;
-	NewSample.SkyLightingVisibility.V[1] = l0 == 0.0f ? l0 : HighQuality.SkyLightingVisibility.V[1] / l0;
-	NewSample.SkyLightingVisibility.V[2] = l0 == 0.0f ? l0 : HighQuality.SkyLightingVisibility.V[2] / l0;
-	NewSample.SkyLightingVisibility.V[3] = l0 == 0.0f ? l0 : HighQuality.SkyLightingVisibility.V[3] / l0;
+	NewSample.SkyLightingVisibility[0] = l0;
+	if (l0 != 0.0f)
+	{
+		NewSample.SkyLightingVisibility[1] = HighQuality.SkyLightingVisibility.V[1] / l0;
+		NewSample.SkyLightingVisibility[2] = HighQuality.SkyLightingVisibility.V[2] / l0;
+		NewSample.SkyLightingVisibility[3] = HighQuality.SkyLightingVisibility.V[3] / l0;
+#if USE_SUNCH
+		NewSample.SkyLightingVisibility[4] = HighQuality.SkyLightingVisibility.V[4] / l0;
+		NewSample.SkyLightingVisibility[5] = HighQuality.SkyLightingVisibility.V[5] / l0;
+		NewSample.SkyLightingVisibility[6] = HighQuality.SkyLightingVisibility.V[6] / l0;
+#endif
+	}
 	//NewSample.SkyLightingVisibility.V[0] = HighQuality.SkyLightingVisibility.V[0];
 	//NewSample.SkyLightingVisibility.V[1] = HighQuality.SkyLightingVisibility.V[1];
 	//NewSample.SkyLightingVisibility.V[2] = HighQuality.SkyLightingVisibility.V[2];

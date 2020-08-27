@@ -31,7 +31,7 @@ public:
 	float AOMaterialMask;
 
 	// MYCODE
-	FSHVector2 SkyLightingVisibility;
+	TSHVector<SUNCH_ORDER> SkyLightingVisibility;
 
 	/** Initialization constructor. */
 	TGatheredLightSample()
@@ -40,6 +40,7 @@ public:
 		IncidentLighting = FLinearColor(0, 0, 0, 0);
 		SkyOcclusion = FVector(0);
 		AOMaterialMask = 0;
+		SkyLightingVisibility = TSHVector<SUNCH_ORDER>();
 	}
 
 	TGatheredLightSample(EForceInit)
@@ -48,6 +49,7 @@ public:
 		IncidentLighting = FLinearColor(0, 0, 0, 0);
 		SkyOcclusion = FVector(0);
 		AOMaterialMask = 0;
+		SkyLightingVisibility = TSHVector<SUNCH_ORDER>();
 	}	
 
 	/**
@@ -114,7 +116,7 @@ public:
 	static TGatheredLightSample<SHOrder> PointLightWorldSpace(const FLinearColor& Color, const FVector4& TangentDirection, const FVector4& WorldDirection);
 
 	template <int32 SHOrder>
-	static TGatheredLightSample<SHOrder> PointSunSHWorldSpace(const FSHVector2& SunSH, const FVector4& TangentDirection, const FVector4& WorldDirection);
+	static TGatheredLightSample<SHOrder> PointSunSHWorldSpace(const TSHVector<SUNCH_ORDER>& SunSH, const FVector4& TangentDirection, const FVector4& WorldDirection);
 };
 
 typedef TGatheredLightSample<2> FGatheredLightSample;
@@ -225,7 +227,7 @@ public:
 		StationarySkyLighting.AddWeighted(FGatheredLightSampleUtil::PointLightWorldSpace<SHOrder>(IncomingSkyLight, TangentSpaceDirection, WorldSpaceDirection), Weight);
 	}
 
-	inline void AddIncomingVisibility(const FSHVector2& IncomingVisibility, float Weight, const FVector4& TangentSpaceDirection, const FVector4& WorldSpaceDirection)
+	inline void AddIncomingVisibility(const TSHVector<SUNCH_ORDER>& IncomingVisibility, float Weight, const FVector4& TangentSpaceDirection, const FVector4& WorldSpaceDirection)
 	{
 		AddWeighted(FGatheredLightSampleUtil::PointSunSHWorldSpace<SHOrder>(IncomingVisibility, TangentSpaceDirection, WorldSpaceDirection), Weight);
 	}

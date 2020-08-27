@@ -25,6 +25,8 @@
 // Add fading CSM plane:
 #define FADE_CSM 1
 
+#define USE_SUNCH_SHADER 1
+
 #if MAX_DYNAMIC_POINT_LIGHTS > 0
 #if VARIABLE_NUM_DYNAMIC_POINT_LIGHTS
 int NumDynamicPointLights;
@@ -329,6 +331,36 @@ void ApplyPixelDepthOffsetForMobileBasePass(inout FMaterialPixelParameters Mater
     float PixelDepthOffset = ApplyPixelDepthOffsetToMaterialParameters(MaterialParameters, PixelMaterialInputs, OutDepth);
 }
 
+// float CalculateSunCH(float4 VisiblityCoeff, float2 SunDirection)
+// {
+// 	float4 CHBasis;
+// 	float SqrtOneOverPI = 0.564189f;
+// 	CHBasis.a = 0.394942f;
+// 	CHBasis.r = SqrtOneOverPI * SunDirection.x;
+// 	CHBasis.g = SqrtOneOverPI * SunDirection.y;
+// 	CHBasis.b = SqrtOneOverPI * 2 * SunDirection.x * SunDirection.x - 1;
+// 	float SunCHIntensity = dot(CHBasis, VisiblityCoeff);
+// 	return SunCHIntensity;
+// }
+
+float CalculateSunCH(float4 VisibilityCoeff0, float4 VisibilityCoeff1, float3 SunDirection)
+{
+	float4 CHBasis0;
+	float4 CHBasis1;
+	float SqrtOneOverPI = 0.564189f;
+	CHBasis0.a = 0.394942f;
+	CHBasis0.r = SqrtOneOverPI * SunDirection.x;
+	CHBasis0.g = SqrtOneOverPI * SunDirection.y;
+	CHBasis0.b = SqrtOneOverPI * 2 * SunDirection.x * SunDirection.x - 1;
+	CHBasis1.a = 0.0f;
+	CHBasis1.r = SqrtOneOverPI * 2 * SunDirection.y * SunDirection.x;
+	CHBasis1.g = SqrtOneOverPI * (-3 * SunDirection.x + 4 * SunDirection.x * SunDirection.x * SunDirection.x);
+	CHBasis1.b = SqrtOneOverPI * (3 * SunDirection.y - 4 * SunDirection.y * SunDirection.y * SunDirection.y);
+
+	float SunCHIntensity = dot(CHBasis0, VisibilityCoeff0) + dot(CHBasis1, VisibilityCoeff1);
+	return SunCHIntensity;
+}
+
 void Main( 
 	FVertexFactoryInterpolantsVSToPS Interpolants
 	, FMobileBasePassInterpolantsVSToPS BasePassInterpolants
@@ -419,6 +451,7 @@ void Main(
 #endif
 #endif
 
+
 #if MOBILE_EMULATION
 	{
 		// this feature is only needed for development/editor - we can compile it out for a shipping build (see r.CompileShadersForDevelopment cvar help)
@@ -442,15 +475,20 @@ void Main(
 
 		half4 LightmapColor = GetLightMapColorLQ( LightmapUV0, LightmapUV1, LightmapDataIndex, MaterialParameters.WorldNormal );
 		//----------MYCODE START---------
-		float4 VisiblityCoeff = GetSkyOcclusion(LightmapUV0);
-		float4 SHBasis;
-		SHBasis.rgb = MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.xyz;
-		SHBasis.a = 1;
-		float SunGI = max(0, dot(SHBasis, VisiblityCoeff));
+		// float4 VisiblityCoeff = GetSkyOcclusion(LightmapUV0);
+		// float4 SHBasis;
+		// SHBasis.rgb = MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.xyz;
+		// SHBasis.a = 1;
+		// float SunGI = max(0, dot(SHBasis, VisiblityCoeff));
+		// // Color += SunGI * MobileDirectionalLight.DirectionalLightColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
 		// Color += SunGI * MobileDirectionalLight.DirectionalLightColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
-		Color += SunGI * MobileDirectionalLight.DirectionalLightColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
+		float4 VisiblityCoeff0,VisiblityCoeff1;
+		GetSkyOcclusion(LightmapUV0, VisiblityCoeff0, VisiblityCoeff1);
+		// float2 SunDirection = normalize(MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.xy);
+		float SunCHIntensity = CalculateSunCH(VisiblityCoeff0, VisiblityCoeff1, MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition.xyz);
+		Color += SunCHIntensity * MobileDirectionalLight.DirectionalLightColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
 		//----------MYCODE END---------
-		Color += LightmapColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
+		// Color += LightmapColor.rgb * DiffuseColor * View.IndirectLightingColorScale;
 		IndirectIrradiance = LightmapColor.a;
 	#elif CACHED_POINT_INDIRECT_LIGHTING
 		#if MATERIALBLENDING_MASKED || MATERIALBLENDING_SOLID

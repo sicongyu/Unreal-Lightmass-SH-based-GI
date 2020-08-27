@@ -122,7 +122,7 @@ namespace Lightmass
 			SkyOcclusion[2] = 0;
 			AOMaterialMask = 0;
 			// MYCODE
-			SkyLightingVisibility = FSHVector2();
+			FMemory::Memzero(SkyLightingVisibility, sizeof(SkyLightingVisibility));
 		}
 
 		/** 
@@ -140,7 +140,7 @@ namespace Lightmass
 		bool bIsMapped;
 
 		// MYCODE
-		FSHVector2 SkyLightingVisibility;
+		float SkyLightingVisibility[7];
 
 		/**
 		 * Export helper

@@ -17,6 +17,8 @@
 #pragma comment(lib, "psapi.lib")
 #endif
 
+#define USE_SUNCH 1
+
 namespace Lightmass
 {
 
@@ -268,30 +270,59 @@ float FStaticLightingSystem::EvaluateSkyVariance(const FVector4& IncomingDirecti
 	return Variance;
 }
 
-FSHVector2 FStaticLightingSystem::CalculateSunSH(const FVector& WorldDirection, bool bDiscardDownVector) const
+/** Get diffuse L1 convolved SH Basis, only valid for order 2. */
+inline TSHVector<2> SHBasisFunctionDiffuseL1(const FVector& Vector)
 {
-	FSHVector2 ResSH;
+	TSHVector<2> Result;
+	Result.V[0] = 0.25f;
+	Result.V[1] = 0.5f * Vector.X;
+	Result.V[2] = 0.5f * Vector.Y;
+	Result.V[3] = 0.5f * Vector.Z;
+	return Result;
+}
+
+inline TSHVector<3> SHBasisFunctionDiffuseL2(const FVector& Vector)
+{
+	TSHVector<3> Result;
+	const float SqrtOneOverPI = 0.564189f;
+	Result.V[0] = 0.394942f;
+	Result.V[1] = SqrtOneOverPI * Vector.X;
+	Result.V[2] = SqrtOneOverPI * Vector.Y;
+	Result.V[3] = SqrtOneOverPI * 2 * Vector.X * Vector.X - 1;
+	Result.V[4] = SqrtOneOverPI * 2 * Vector.Y * Vector.X;
+	Result.V[5] = SqrtOneOverPI * (-3 * Vector.X + 4 * FMath::Pow(Vector.X, 3));
+	Result.V[6] = SqrtOneOverPI * (3 * Vector.Y - 4 * FMath::Pow(Vector.Y, 3));
+	return Result;
+}
+
+TSHVector<SUNCH_ORDER> FStaticLightingSystem::CalculateSunSH(const FVector& WorldDirection, bool bDiscardDownVector) const
+{
+	TSHVector<SUNCH_ORDER> ResSH;
 	if (bDiscardDownVector && WorldDirection.Z < 0.0f)
 	{
 		return ResSH;
 	}
-
+#if USE_SUNCH
+	ResSH = SHBasisFunctionDiffuseL2(WorldDirection.GetSafeNormal());
+#else
 	ResSH = FSHVector2::SHBasisFunctionDiffuseL1(WorldDirection.GetSafeNormal());
+#endif
+
 
 	return ResSH;
 }
 
-FSHVector2 FStaticLightingSystem::CalculateExitantVisibility(
+TSHVector<SUNCH_ORDER> FStaticLightingSystem::CalculateExitantVisibility(
 	const FStaticLightingMapping* HitMapping,
 	const FMinimalStaticLightingVertex& Vertex,
 	EHemisphereGatherClassification GatherClassification) const
 {
-	FSHVector2 AccumulatedVisibility;
+	TSHVector<SUNCH_ORDER> AccumulatedVisibility;
 
 	if ((GatherClassification & GLM_GatherRadiosityBuffer0) || (GatherClassification & GLM_GatherRadiosityBuffer1))
 	{
 		const int32 BufferIndex = GatherClassification & GLM_GatherRadiosityBuffer0 ? 0 : 1;
-		const FSHVector2 Visibility = HitMapping->GetCachedSkyLightingVisiblity(BufferIndex, HitMapping->GetSurfaceCacheIndex(Vertex));
+		const TSHVector<SUNCH_ORDER> Visibility = HitMapping->GetCachedSkyLightingVisiblity(BufferIndex, HitMapping->GetSurfaceCacheIndex(Vertex));
 		AccumulatedVisibility += Visibility;
 	}
 
@@ -440,7 +471,7 @@ FLinearColor FStaticLightingSystem::FinalGatherSample(
 	FFinalGatherHitPoint& HitPoint,
 	FVector& OutUnoccludedSkyVector,
 	FLinearColor& OutStationarySkyLighting,
-	FSHVector2& OutVisibility,
+	TSHVector<SUNCH_ORDER>& OutVisibility,
 	const FVector4& TriangleTangentPathDirection) const
 {
 	FLinearColor Lighting = FLinearColor::Black;
@@ -1069,7 +1100,7 @@ public:
 							FFinalGatherHitPoint HitPoint;
 
 							// MYCODE: Padding variable for SH. TODO: Fix the SH into Refinement
-							FSHVector2 SkyLightingVisibility;
+							TSHVector<SUNCH_ORDER> SkyLightingVisibility;
 							FVector4 UnusedTriangleTangentpathDirection;
 
 							const FLinearColor SubsampleLighting = LightingSystem.FinalGatherSample(
@@ -1189,6 +1220,29 @@ private:
 	}
 };
 
+#if USE_SUNCH
+FSHVector2 CalculateSunFourier(const FVector& WorldDirection, bool bDiscardDownVector, float Theta) {
+	FSHVector2 ResSH;
+	if (bDiscardDownVector && WorldDirection.Z < 0.0f)
+	{
+		return ResSH;
+	}
+
+	const float SqrtOneOverPI = FMath::Sqrt(1 / PI);
+	const int Order = 4;
+	ResSH.V[0] = FMath::Sqrt(1 / (2 * PI));
+
+	for (int i = 1; i < Order; i++)
+	{
+		float Coeff = (i % 2 == 1) ? FMath::Cos((float)i * Theta) : FMath::Sin((float)i * Theta);
+		Coeff *= SqrtOneOverPI;
+		ResSH.V[i] = Coeff;
+	}
+
+	return ResSH;
+}
+#endif
+
 /** 
  * Final gather using adaptive sampling to estimate the incident radiance function. 
  * Adaptive refinement is done on brightness differences and anywhere that a first bounce photon determined lighting was coming from.
@@ -1241,9 +1295,49 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 	// MYCODE
 	FSHVector2 AccumlatedSkyLightingVisiblitySample;
 
+	SampleType IncomingRadiance;
+
 	// Initialize the root level of the refinement grid with lighting values
 	for (int32 ThetaIndex = 0; ThetaIndex < NumThetaSteps; ThetaIndex++)
 	{
+
+#if USE_SUNCH
+		//if (GatherClassification & GLM_GatherLightEmitted)
+		//{
+		//	// Only Fire Sample Rays around a semi-circle instead of a semi-sphere
+		//	const float U = RandomStream.GetFraction();
+		//	const float ThetaFraction = (ThetaIndex + U) / (float)NumThetaSteps;
+		//	const float Theta = (float)PI * ThetaFraction;
+
+		//	// TODO: FIX to the correct hemisphere
+		//	Vertex.ComputeCirclePathDirections(Theta, WorldPathDirections[0], TangentPathDirections[0]);
+
+		//	IntersectLightRays(
+		//		Mapping,
+		//		Vertex,
+		//		SampleRadius,
+		//		1,
+		//		WorldPathDirections,
+		//		TangentPathDirections,
+		//		RayBiasMode,
+		//		MappingContext,
+		//		LightRays,
+		//		LightRayIntersections);
+
+		//	FSHVector2 SunFourier;
+
+		//	if (!LightRayIntersections[0].bIntersects)
+		//	{
+		//		/* Since the Circle is around Z-Axis, the Path Direction must equal to zero */
+		//		//if (TangentPathDirections[0].Z > 0)
+		//		SunFourier = CalculateSunFourier(WorldPathDirections[0], true, Theta);
+		//	}
+
+		//	const float UniformPDF = 1.0f / (float)PI;
+		//	const float SampleWeight = 1.0f / (UniformPDF * NumThetaSteps);
+		//	IncomingRadiance.AddIncomingVisibility(SunFourier, SampleWeight, TangentPathDirections[0], WorldPathDirections[0]);
+		//}
+#endif
 		for (int32 PhiIndex = 0; PhiIndex < NumPhiSteps; PhiIndex++)
 		{
 			const int32 SampleIndex = ThetaIndex * NumPhiSteps + PhiIndex;
@@ -1268,7 +1362,7 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 			FFinalGatherInfo FinalGatherInfo;
 			FFinalGatherHitPoint HitPoint;
 			// MYCODE
-			FSHVector2 SkyLightingVisibility;
+			TSHVector<SUNCH_ORDER> SkyLightingVisibility;
 
 			const FLinearColor Radiance = FinalGatherSample(
 				Mapping,
@@ -1357,7 +1451,6 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 	}
 #endif
 
-	SampleType IncomingRadiance;
 	FVector CombinedSkyUnoccludedDirection(0);
 	float NumSamplesOccluded = 0;
 
@@ -1398,6 +1491,13 @@ SampleType FStaticLightingSystem::IncomingRadianceAdaptive(
 			NumSamplesOccluded += FilteredLighting.NumSamplesOccluded;
 			// MYCODE
 			//AccumlatedSkyLightingVisiblitySample += FilteredLighting.SkyLightingVisibility;
+			/* Accumalte multibouncing here once it's not the setup pass */
+#if USE_SUNCH
+			//if (GatherClassification & GLM_GatherLightEmitted)
+			//{
+			//	continue;
+			//}
+#endif
 			IncomingRadiance.AddIncomingVisibility(FilteredLighting.SkyLightingVisibility, SampleWeight, TangentPathDirection, WorldPathDirection);
 		}
 	}

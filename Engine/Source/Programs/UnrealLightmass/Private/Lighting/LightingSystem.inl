@@ -20,7 +20,7 @@ TGatheredLightSample<SHOrder> FGatheredLightSampleUtil::AmbientLight(const FLine
 }
 
 template<int32 SHOrder>
-TGatheredLightSample<SHOrder> FGatheredLightSampleUtil::PointSunSHWorldSpace(const FSHVector2& SunSH, const FVector4& TangentDirection, const FVector4& WorldDirection)
+TGatheredLightSample<SHOrder> FGatheredLightSampleUtil::PointSunSHWorldSpace(const TSHVector<SUNCH_ORDER>& SunSH, const FVector4& TangentDirection, const FVector4& WorldDirection)
 {
     TGatheredLightSample<SHOrder> Result;
 
@@ -223,7 +223,7 @@ void FStaticLightingSystem::CalculateApproximateDirectLighting(
 				const FVector4 UnitWorldLightVector = WorldLightVector.GetSafeNormal();
 
 				// Compute SunSH
-				const FSHVector2 SunSH = CalculateSunSH(UnitWorldLightVector.GetSafeNormal(), false) * FinalIntensity.GetLuminance();
+				const TSHVector<SUNCH_ORDER> SunSH = CalculateSunSH(UnitWorldLightVector.GetSafeNormal(), false) * FinalIntensity.GetLuminance();
 
 				// Compute the light-map sample for the front-face of the vertex.
 				TGatheredLightSample<SHOrder> Lighting = FGatheredLightSampleUtil::PointLightWorldSpace<SHOrder>(FinalIntensity, TangentLightVector, WorldLightVector.GetSafeNormal());

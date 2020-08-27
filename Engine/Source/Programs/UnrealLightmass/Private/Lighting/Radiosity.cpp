@@ -424,8 +424,8 @@ void FStaticLightingSystem::RadiositySetupTextureMapping(FStaticLightingTextureM
 				FLinearColor IncidentLighting = FLinearColor::Black;
 				FLinearColor IncidentLightingForRadiosity = FLinearColor::Black;
 
-				FSHVector2 IncidentSunSH;
-				FSHVector2 IncidentSunSHForCache;
+				TSHVector<SUNCH_ORDER> IncidentSunSH;
+				TSHVector<SUNCH_ORDER> IncidentSunSHForCache;
 
 				const bool bIsTranslucent = TextureMapping->Mesh->IsTranslucent(TexelToVertex.ElementIndex);
 				const FLinearColor Reflectance = (bIsTranslucent ? FLinearColor::Black : TextureMapping->Mesh->EvaluateTotalReflectance(CurrentVertex, TexelToVertex.ElementIndex)) * (float)INV_PI;
@@ -743,7 +743,7 @@ void FStaticLightingSystem::RadiosityIterationTextureMapping(FStaticLightingText
 
 					// MYCODE
 					const float VisibilityReflectance = Reflectance.GetLuminance();
-					FSHVector2 SkyLightingVisibility = IterationLighting.SkyLightingVisibility * VisibilityReflectance;
+					TSHVector<SUNCH_ORDER> SkyLightingVisibility = IterationLighting.SkyLightingVisibility * VisibilityReflectance;
 
 					if (GeneralSettings.ViewSingleBounceNumber < 0 || GeneralSettings.ViewSingleBounceNumber == PassIndex + 2)
 					{
@@ -782,7 +782,7 @@ void FStaticLightingSystem::RadiosityIterationCachedHitpointsTextureMapping(cons
 	IterationRecordRadiosity.AddUninitialized(GatherHitPoints.GatherHitPointRanges.Num());
 
 	// MYCODE: AddUninitialized：可能所有元素都会被遍历，因此Uninitialized
-	TArray<FSHVector2> IterationRecordSkyLightingVisibility;
+	TArray<TSHVector<SUNCH_ORDER>> IterationRecordSkyLightingVisibility;
 	IterationRecordSkyLightingVisibility.Empty(GatherHitPoints.GatherHitPointRanges.Num());
 	IterationRecordSkyLightingVisibility.AddUninitialized(GatherHitPoints.GatherHitPointRanges.Num());
 
@@ -790,7 +790,7 @@ void FStaticLightingSystem::RadiosityIterationCachedHitpointsTextureMapping(cons
 	{
 		FLinearColor NewRadiosity = FLinearColor::Black;
 		// MYCODE
-		FSHVector2 NewSkyLightingVisibility;
+		TSHVector<SUNCH_ORDER> NewSkyLightingVisibility;
 
 		const FArrayRange& HitPointRange = GatherHitPoints.GatherHitPointRanges[LightingCacheRecordIndex];
 
@@ -803,7 +803,7 @@ void FStaticLightingSystem::RadiosityIterationCachedHitpointsTextureMapping(cons
 			NewRadiosity += IncomingRadiance * HitPoint.Weight.GetFloat();
 
 			// MYCODE: 来自GatherHitPoint的Weight，暂时不知道作用，先乘了再说
-			const FSHVector2 IncomingSkyLightingVisibility = HitTextureMapping->GetCachedSkyLightingVisiblity(SourceRadiosityBufferIndex, HitPoint.MappingSurfaceCoordinate);
+			const TSHVector<SUNCH_ORDER> IncomingSkyLightingVisibility = HitTextureMapping->GetCachedSkyLightingVisiblity(SourceRadiosityBufferIndex, HitPoint.MappingSurfaceCoordinate);
 			NewSkyLightingVisibility += IncomingSkyLightingVisibility * HitPoint.Weight.GetFloat();
 		}
 
@@ -838,7 +838,7 @@ void FStaticLightingSystem::RadiosityIterationCachedHitpointsTextureMapping(cons
 				float TotalWeight = 0.0f;
 				FLinearColor AccumulatedRadiosity = FLinearColor::Black;
 				// MYCODE
-				FSHVector2 AccumulateSkyLightingVisibility;
+				TSHVector<SUNCH_ORDER> AccumulateSkyLightingVisibility;
 
 				for (int32 InfluenceIndex = Range.StartIndex; InfluenceIndex < Range.StartIndex + Range.NumEntries; InfluenceIndex++)
 				{
@@ -858,7 +858,7 @@ void FStaticLightingSystem::RadiosityIterationCachedHitpointsTextureMapping(cons
 				FLinearColor IterationRadiosity = (AccumulatedRadiosity / TotalWeight) * DiffuseReflectance;
 				// MYCODE: ？DiffuseReflectance指的是材质中的Diffuse系数，这里我们的Visibility应该不用乘（也乘不了）
 				const float VisibilityReflectance = DiffuseReflectance.GetLuminance();
-				FSHVector2 IterationSkyLightingVisibility = (AccumulateSkyLightingVisibility / TotalWeight) * VisibilityReflectance;
+				TSHVector<SUNCH_ORDER> IterationSkyLightingVisibility = (AccumulateSkyLightingVisibility / TotalWeight) * VisibilityReflectance;
 				
 				if (GeneralSettings.ViewSingleBounceNumber < 0 || GeneralSettings.ViewSingleBounceNumber == PassIndex + 2)
 				{

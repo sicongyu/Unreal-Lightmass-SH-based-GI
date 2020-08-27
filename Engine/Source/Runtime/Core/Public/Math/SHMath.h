@@ -17,6 +17,10 @@ extern CORE_API int32 BasisM[9];
 
 extern CORE_API float LegendrePolynomial(int32 L, int32 M, float X);
 
+#define USE_SUNCH 1
+
+#define SUNCH_ORDER ( USE_SUNCH+2 )
+
 /** Returns the basis index of the SH basis L,M. */
 FORCEINLINE int32 SHGetBasisIndex(int32 L,int32 M)
 {
@@ -343,17 +347,6 @@ public:
 			Result.V[BasisIndex] *= Scale;
 		}
 
-		return Result;
-	}
-
-	/** Get diffuse L1 convolved SH Basis, only valid for order 2. */
-	static inline TSHVector<2> SHBasisFunctionDiffuseL1(const FVector& Vector)
-	{
-		TSHVector<2> Result;
-		Result.V[0] = 0.25f;
-		Result.V[1] = 0.5f * Vector.X;
-		Result.V[2] = 0.5f * Vector.Y;
-		Result.V[3] = 0.5f * Vector.Z;
 		return Result;
 	}
 

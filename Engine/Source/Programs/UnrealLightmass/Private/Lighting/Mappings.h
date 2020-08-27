@@ -107,9 +107,9 @@ protected:
 	TArray<FLinearColor> RadiositySurfaceCache[2];
 
 	// MYCODE
-	TArray<FSHVector2> AccumaltedSkyLightingVisibility;
+	TArray<TSHVector<SUNCH_ORDER>> AccumaltedSkyLightingVisibility;
 
-	TArray<FSHVector2> SkyLightingVisibility[2];
+	TArray<TSHVector<SUNCH_ORDER>> SkyLightingVisibility[2];
 
 	/** Indexed by texel coordinate */
 	FCompressedInfluencingRecords CompressedInfluencingRecords;
@@ -166,13 +166,12 @@ public:
 
 	virtual FLinearColor GetSurfaceCacheLighting(const FMinimalStaticLightingVertex& Vertex) const = 0;
 
-	virtual FSHVector2 GetSurfaceCacheVisibility(const FMinimalStaticLightingVertex& Vertex) const = 0;
-
 	virtual int32 GetSurfaceCacheIndex(const struct FMinimalStaticLightingVertex& Vertex) const = 0;
 	FLinearColor GetCachedRadiosity(int32 RadiosityBufferIndex, int32 SurfaceCacheIndex) const;
 	size_t FreeRadiosityTemporaries();
 	// MYCODE
-	FSHVector2 GetCachedSkyLightingVisiblity(int32 VisibilityBufferIndex, int32 SurfaceCacheIndex) const;
+	virtual TSHVector<SUNCH_ORDER> GetSurfaceCacheVisibility(const FMinimalStaticLightingVertex& Vertex) const = 0;
+	TSHVector<SUNCH_ORDER> GetCachedSkyLightingVisiblity(int32 VisibilityBufferIndex, int32 SurfaceCacheIndex) const;
 
 	uint32 GetIrradiancePhotonCacheBytes() const { return SurfaceCacheLighting.GetAllocatedSize(); }
 
@@ -216,7 +215,7 @@ public:
 
 	virtual FLinearColor GetSurfaceCacheLighting(const FMinimalStaticLightingVertex& Vertex) const override;
 
-	virtual FSHVector2 GetSurfaceCacheVisibility(const FMinimalStaticLightingVertex& Vertex) const override;
+	virtual TSHVector<SUNCH_ORDER> GetSurfaceCacheVisibility(const FMinimalStaticLightingVertex& Vertex) const override;
 
 	virtual int32 GetSurfaceCacheIndex(const struct FMinimalStaticLightingVertex& Vertex) const;
 

@@ -649,7 +649,7 @@ void FStaticLightingSystem::FinalizeSurfaceCacheTextureMapping(FStaticLightingTe
 				// SurfaceCacheLighting at this point contains 1st and up bounce lighting for the skylight and emissive sources, computed by the radiosity iterations
 				FinalIncidentLighting += TextureMapping->SurfaceCacheLighting[SurfaceCacheIndex];
 
-				FSHVector2 FinalIncidentVisibility;
+				TSHVector<SUNCH_ORDER> FinalIncidentVisibility;
 
 				FinalIncidentVisibility += TextureMapping->AccumaltedSkyLightingVisibility[SurfaceCacheIndex];
 
@@ -3810,7 +3810,7 @@ FLinearColor FStaticLightingMapping::GetCachedRadiosity(int32 RadiosityBufferInd
 }
 
 // MYCODE
-FSHVector2 FStaticLightingMapping::GetCachedSkyLightingVisiblity(int32 VisibilityBufferIndex, int32 SurfaceCacheIndex) const {
+TSHVector<SUNCH_ORDER> FStaticLightingMapping::GetCachedSkyLightingVisiblity(int32 VisibilityBufferIndex, int32 SurfaceCacheIndex) const {
 	return SkyLightingVisibility[VisibilityBufferIndex][SurfaceCacheIndex];
 }
 
@@ -3826,10 +3826,10 @@ FLinearColor FStaticLightingTextureMapping::GetSurfaceCacheLighting(const FMinim
 	return Lighting;
 }
 
-FSHVector2 FStaticLightingTextureMapping::GetSurfaceCacheVisibility(const FMinimalStaticLightingVertex& Vertex) const
+TSHVector<SUNCH_ORDER> FStaticLightingTextureMapping::GetSurfaceCacheVisibility(const FMinimalStaticLightingVertex& Vertex) const
 {
 	int32 SurfaceCacheIndex = GetSurfaceCacheIndex(Vertex);
-	FSHVector2 Visibility = AccumaltedSkyLightingVisibility[SurfaceCacheIndex];
+	TSHVector<SUNCH_ORDER> Visibility = AccumaltedSkyLightingVisibility[SurfaceCacheIndex];
 	return Visibility;
 }
 

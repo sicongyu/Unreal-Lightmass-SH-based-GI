@@ -12,6 +12,10 @@
  */
 #define ALLOW_LIGHTMAP_SAMPLE_DEBUGGING	0
 
+//#define USE_SUNCH 1
+//
+//#define SUNCH_ORDER ( USE_SUNCH+2 )
+
 #if USE_EMBREE
 #include <embree2/rtcore.h>
 #include <embree2/rtcore_ray.h>

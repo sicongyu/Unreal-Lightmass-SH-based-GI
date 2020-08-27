@@ -271,12 +271,12 @@ namespace Lightmass
 			//const FVector4 MappedSHCoeff = SourceSample.SkyLightingVisibility.ConvertToVector4() / 5.0f;
 			const float Boost = 0.5f;
 
-			DestCoefficients.SkyOcclusion[3] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(FMath::Pow(SourceSample.SkyLightingVisibility.V[0], Boost) * 255.0f), 0, 255);
+			DestCoefficients.SkyOcclusion[3] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(FMath::Pow(SourceSample.SkyLightingVisibility[0], Boost) * 255.0f), 0, 255);
 			//DestCoefficients.SkyOcclusion[3] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(SourceSample.SkyLightingVisibility.V[0] * 0.5f * 255.0f), 0, 255);
-			DestCoefficients.SkyOcclusion[0] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility.V[1] + 1.0f) * 0.5f * 255.0f), 0, 255);
-			DestCoefficients.SkyOcclusion[1] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility.V[2] + 1.0f) * 0.5f * 255.0f), 0, 255);
+			DestCoefficients.SkyOcclusion[0] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility[1] + 1.0f) * 0.5f * 255.0f), 0, 255);
+			DestCoefficients.SkyOcclusion[1] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility[2] + 1.0f) * 0.5f * 255.0f), 0, 255);
 			//float temp = (SourceSample.SkyLightingVisibility.V[2] + 1.0f) / 2.0f * 255.0f;												 
-			DestCoefficients.SkyOcclusion[2] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility.V[3] + 1.0f) * 0.5f * 255.0f), 0, 255);
+			DestCoefficients.SkyOcclusion[2] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility[3] + 1.0f) * 0.5f * 255.0f), 0, 255);
 
 
 			//DestCoefficients.SkyOcclusion[0] = (uint8)FMath::Clamp<int32>( FMath::RoundToInt( NormalizedBentNormal[0] * 255.0f ), 0, 255 );
@@ -330,18 +330,18 @@ namespace Lightmass
 				float LogR = LogL * U * CoefficientMultiply[2][0] + CoefficientAdd[2][0];
 				float LogG = LogL * V * CoefficientMultiply[2][1] + CoefficientAdd[2][1];
 				float LogB = LogL * W * CoefficientMultiply[2][2] + CoefficientAdd[2][2];
-				
+#if USE_SUNCH
+				DestCoefficients.Coefficients[2][3] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(FMath::Pow(SourceSample.SkyLightingVisibility[0], Boost) * 255.0f), 0, 255);
+				DestCoefficients.Coefficients[2][0] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility[4] + 1.0f) * 0.5f * 255.0f), 0, 255);
+				DestCoefficients.Coefficients[2][1] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility[5] + 1.0f) * 0.5f * 255.0f), 0, 255);
+				DestCoefficients.Coefficients[2][2] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility[6] + 1.0f) * 0.5f * 255.0f), 0, 255);
+#else
 				// LogR, LogG, LogB
-				//DestCoefficients.Coefficients[2][0] = (uint8)FMath::Clamp<int32>( FMath::RoundToInt( LogR * 255.0f ), 0, 255 );
-				//DestCoefficients.Coefficients[2][1] = (uint8)FMath::Clamp<int32>( FMath::RoundToInt( LogG * 255.0f ), 0, 255 );
-				//DestCoefficients.Coefficients[2][2] = (uint8)FMath::Clamp<int32>( FMath::RoundToInt( LogB * 255.0f ), 0, 255 );
-				//DestCoefficients.Coefficients[2][3] = 255;
-
-				DestCoefficients.Coefficients[2][3] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt(FMath::Pow(SourceSample.SkyLightingVisibility.V[0], Boost) * 255.0f), 0, 255);
-				DestCoefficients.Coefficients[2][0] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility.V[1] + 1.0f) * 0.5f * 255.0f), 0, 255);
-				DestCoefficients.Coefficients[2][1] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility.V[2] + 1.0f) * 0.5f * 255.0f), 0, 255);
-				DestCoefficients.Coefficients[2][2] = (uint8)FMath::Clamp<int32>(FMath::RoundToInt((SourceSample.SkyLightingVisibility.V[3] + 1.0f) * 0.5f * 255.0f), 0, 255);
-
+				DestCoefficients.Coefficients[2][0] = (uint8)FMath::Clamp<int32>( FMath::RoundToInt( LogR * 255.0f ), 0, 255 );
+				DestCoefficients.Coefficients[2][1] = (uint8)FMath::Clamp<int32>( FMath::RoundToInt( LogG * 255.0f ), 0, 255 );
+				DestCoefficients.Coefficients[2][2] = (uint8)FMath::Clamp<int32>( FMath::RoundToInt( LogB * 255.0f ), 0, 255 );
+				DestCoefficients.Coefficients[2][3] = 255;
+#endif
 				float Dx = SourceSample.Coefficients[3][0] * CoefficientMultiply[3][0] + CoefficientAdd[3][0];
 				float Dy = SourceSample.Coefficients[3][1] * CoefficientMultiply[3][1] + CoefficientAdd[3][1];
 				float Dz = SourceSample.Coefficients[3][2] * CoefficientMultiply[3][2] + CoefficientAdd[3][2];

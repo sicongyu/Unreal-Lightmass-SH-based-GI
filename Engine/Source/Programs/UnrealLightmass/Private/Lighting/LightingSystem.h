@@ -1240,14 +1240,14 @@ public:
 	FLinearColor StationarySkyLighting;
 	float NumSamplesOccluded;
 	//MYCODE
-	FSHVector2 SkyLightingVisibility;
+	TSHVector<SUNCH_ORDER> SkyLightingVisibility;
 
 	FLightingAndOcclusion() :
 		Lighting(ForceInit),
 		UnoccludedSkyVector(FVector(0)),
 		StationarySkyLighting(FLinearColor::Black),
 		NumSamplesOccluded(0),
-		SkyLightingVisibility(FSHVector2())
+		SkyLightingVisibility(TSHVector<SUNCH_ORDER>())
 	{}
 
 	FLightingAndOcclusion(const FLinearColor& InLighting, FVector InUnoccludedSkyVector, const FLinearColor& InStationarySkyLighting, float InNumSamplesOccluded) :
@@ -1255,10 +1255,10 @@ public:
 		UnoccludedSkyVector(InUnoccludedSkyVector),
 		StationarySkyLighting(InStationarySkyLighting),
 		NumSamplesOccluded(InNumSamplesOccluded),
-		SkyLightingVisibility(FSHVector2())
+		SkyLightingVisibility(TSHVector<SUNCH_ORDER>())
 	{}
 
-	FLightingAndOcclusion(const FLinearColor& InLighting, FVector InUnoccludedSkyVector, const FLinearColor& InStationarySkyLighting, float InNumSamplesOccluded, const FSHVector2& InSkyLightingVisibility) : 
+	FLightingAndOcclusion(const FLinearColor& InLighting, FVector InUnoccludedSkyVector, const FLinearColor& InStationarySkyLighting, float InNumSamplesOccluded, const TSHVector<SUNCH_ORDER>& InSkyLightingVisibility) :
 		Lighting(InLighting),
 		UnoccludedSkyVector(InUnoccludedSkyVector),
 		StationarySkyLighting(InStationarySkyLighting),
@@ -2319,12 +2319,12 @@ private:
 		FStaticLightingMappingContext& MappingContext,
 		bool bDebugThisTexel) const;
 
-	FSHVector2 CalculateExitantVisibility(
+	TSHVector<SUNCH_ORDER> CalculateExitantVisibility(
 		const FStaticLightingMapping* HitMapping,
 		const FMinimalStaticLightingVertex& Vertex,
 		EHemisphereGatherClassification GatherClassification) const;
 
-	FSHVector2 CalculateSunSH(const FVector& WorldDirection, bool bDiscardDownVector) const;
+	TSHVector<SUNCH_ORDER> CalculateSunSH(const FVector& WorldDirection, bool bDiscardDownVector) const;
 
 	void IntersectLightRays(
 		const FStaticLightingMapping* Mapping,
@@ -2358,7 +2358,7 @@ private:
 		FFinalGatherHitPoint& HitPoint,
 		FVector& OutUnoccludedSkyVector,
 		FLinearColor& OutStationarySkyLighting,
-		FSHVector2& OutVisibility,
+		TSHVector<SUNCH_ORDER>& OutVisibility,
 		const FVector4& TriangleTangentPathDirection) const;
 
 	/** 

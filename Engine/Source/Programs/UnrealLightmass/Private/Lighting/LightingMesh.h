@@ -215,6 +215,19 @@ struct FFullStaticLightingVertex : public FStaticLightingVertex
 		TangentPathDirection = TransformWorldVectorToTangent(WorldPathDirection);
 		checkSlow(TangentPathDirection.IsUnit3());
 	}
+
+	inline void ComputeCirclePathDirections(float Theta, FVector4& WorldPathDirection, FVector4& TangentPathDirection) const
+	{
+		const float phi = 50.0f / 180.0f * (float)PI;
+		FVector4 TangetProjection = TriangleNormal;
+		TangetProjection.Z = 0.0f;
+		const FVector4 ZeroVector = TriangleNormal ^ TangetProjection;
+		const FRotator ThetaRotator(0.0f, Theta, 0.0f);
+		WorldPathDirection = ThetaRotator.RotateVector(ZeroVector).GetSafeNormal();
+		WorldPathDirection.Z = tan(phi);
+		WorldPathDirection = WorldPathDirection.GetSafeNormal();
+		TangentPathDirection = TransformWorldVectorToTangent(WorldPathDirection);
+	}
 };
 
 /** The result of an intersection between a light ray and the scene. */

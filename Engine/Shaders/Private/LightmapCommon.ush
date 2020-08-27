@@ -165,19 +165,29 @@ float4 GetSkyBentNormalAndOcclusion(VTPageTableResult LightmapVTPageTableResult,
 }
 
 // MYCODE: Simplified Get Occlusion from texture
-float4 GetSkyOcclusion(float2 LightmapUV)
+void GetSkyOcclusion(in float2 LightmapUV, out float4 VisibilityWeight0, out float4 VisibilityWeight1)
 {
-	float4 TextureValue;
+	float4 TextureValue0;
+	float4 TextureValue1;
 	float2 VisibilityLightmapUV = LightmapUV;
 	VisibilityLightmapUV.y = VisibilityLightmapUV.y * 2;
-	// TextureValue = Texture2DSample( LightmapResourceCluster.SkyOcclusionTexture, LIGHTMAP_SHARED_SAMPLER(SkyOcclusionSampler), VisibilityLightmapUV );
-	TextureValue = Texture2DSample( LightmapResourceCluster.LightMapTexture, LIGHTMAP_SHARED_SAMPLER(LightMapSampler), LightmapUV );
+	TextureValue0 = Texture2DSample( LightmapResourceCluster.SkyOcclusionTexture, LIGHTMAP_SHARED_SAMPLER(SkyOcclusionSampler), VisibilityLightmapUV );
+	TextureValue1 = Texture2DSample( LightmapResourceCluster.LightMapTexture, LIGHTMAP_SHARED_SAMPLER(LightMapSampler), LightmapUV );
 
+	// TextureValue.a = TextureValue.a * TextureValue.a;
+	// TextureValue.rgb = (TextureValue.rgb * 2 - 1) * TextureValue.a;
+	// TextureValue.a = TextureValue.a / 2;
 
-	TextureValue.a = TextureValue.a * TextureValue.a;
-	TextureValue.rgb = (TextureValue.rgb * 2 - 1) * TextureValue.a;
-	TextureValue.a = TextureValue.a / 2;
-	return TextureValue;
+	TextureValue0.a = TextureValue0.a * TextureValue0.a;
+	TextureValue0.rgb = (TextureValue0.rgb * 2 - 1) * TextureValue0.a;
+	TextureValue0.a = TextureValue0.a / 2;
+
+	TextureValue1.a = TextureValue1.a * TextureValue1.a;
+	TextureValue1.rgb = (TextureValue1.rgb * 2 - 1) * TextureValue1.a;
+	TextureValue1.a = TextureValue1.a / 2;
+
+	VisibilityWeight0 = TextureValue0;
+	VisibilityWeight1 = TextureValue1;
 }
 
 float GetAOMaterialMask(VTPageTableResult LightmapVTPageTableResult, float2 LightmapUV, uint LightmapDataIndex, float2 SvPositionXY)
